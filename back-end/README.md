@@ -37,7 +37,7 @@ Universal Disk Explorer is a comprehensive tool designed to analyze disk content
 
 4. Run the FastAPI application:
    ```bash
-   uvicorn universal_disk_explorer_back_end.main:app --reload
+   uvicorn universal_disk_explorer.main:app --reload
    ```
 
 ## API Endpoints
