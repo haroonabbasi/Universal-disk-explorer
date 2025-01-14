@@ -21,9 +21,8 @@ Universal Disk Explorer is a comprehensive tool designed to analyze disk content
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/disk-explorer.git
-   cd disk-explorer
-   ```
+   git clone https://github.com/haroonabbasi/universal-disk-explorer.git
+   cd universal-disk-explorer
 
 2. Install dependencies using Poetry:
    ```bash
