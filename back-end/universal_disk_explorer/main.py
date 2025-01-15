@@ -12,6 +12,10 @@ scanner = FileScanner()
 video_analyzer = VideoAnalyzer()
 file_ops = FileOperations()
 
+@app.get("/")
+def read_root():
+    return {"message": "Running..!"}
+
 @app.get("/scan/{path:path}", response_model=List[FileInfo])
 async def scan_directory(path: str, include_video_metadata: bool = False):
     """Scan directory and return file information"""

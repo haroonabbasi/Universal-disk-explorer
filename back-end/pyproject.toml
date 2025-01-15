@@ -1,14 +1,8 @@
 [tool.poetry]
-name = "universal-disk-explorer-back-end"
+name = "universal-disk-explorer"
 version = "0.1.0"
 description = "Universal Disk explorer with advanced file and video analysis capabilities"
 authors = ["Haroon Abbasi <haroonabbasi.ali@gmail.com>"]
-
-[tool.poetry]
-name = "disk-explorer"
-version = "0.1.0"
-description = "Disk explorer with advanced file and video analysis capabilities"
-authors = ["Your Name <your.email@example.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.12"  # Updated to match your Python version
