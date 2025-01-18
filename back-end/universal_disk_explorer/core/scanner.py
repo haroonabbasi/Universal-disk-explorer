@@ -50,28 +50,28 @@ class FileScanner:
         except (PermissionError, FileNotFoundError):
             return None
 
-    async def scan_directory(self, root_path: str, exclude_dirs: Set[str] = None) -> List[FileMetadata]:
-        """Recursively scan directory and collect file metadata"""
+    async def scan_directory(self, root_path: str, exclude_dirs: Set[str] = None) -> List[dict]:
+        """Recursively scan directory and collect file metadata."""
         exclude_dirs = exclude_dirs or {'.git', 'node_modules', '__pycache__'}
         root = Path(root_path)
         results = []
-        
+
         async def scan_recursive(current_path: Path):
             try:
-                async for entry in aiofiles.os.scandir(str(current_path)):
-                    entry_path = Path(entry.path)
-                    if entry_path.name.startswith('.'):
+                for entry in current_path.iterdir():  # Synchronous iteration
+                    if entry.name.startswith('.'):
                         continue
-                        
-                    if entry_path.is_dir() and entry_path.name not in exclude_dirs:
-                        await scan_recursive(entry_path)
+
+                    if entry.is_dir() and entry.name not in exclude_dirs:
+                        await scan_recursive(entry)  # Recursively scan directories
                     
-                    metadata = await self.get_file_metadata(entry_path)
-                    if metadata:
-                        results.append(metadata)
+                    if entry.is_file():  # Ensure it's a file before collecting metadata
+                        metadata = await self.get_file_metadata(entry)
+                        if metadata:
+                            results.append(metadata)
             except (PermissionError, FileNotFoundError):
                 pass
-                
+
         await scan_recursive(root)
         return results
 

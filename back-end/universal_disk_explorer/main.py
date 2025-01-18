@@ -1,16 +1,44 @@
-from fastapi import FastAPI, HTTPException
+import logging
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse
 from typing import List, Optional
 from pathlib import Path
 
+from .app_config import get_config
 from .core.scanner import FileScanner
 from .core.video import VideoAnalyzer
 from .core.file_ops import FileOperations
 from .models.schemas import FileInfo, FileMetadata
 
+
+config = get_config()  # The same cached instance will be returned
+# print(config.app_name)
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('app.log'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
+
 app = FastAPI(title="Disk Explorer")
 scanner = FileScanner()
-video_analyzer = VideoAnalyzer()
+video_analyzer = VideoAnalyzer(config.FFMPEG_PATH)
 file_ops = FileOperations()
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled exception: {exc}", exc_info=True)  # Log the error with traceback
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error"}
+    )
 
 @app.get("/")
 def read_root():
