@@ -1,8 +1,11 @@
 import logging
-from fastapi import FastAPI, Request, HTTPException
+import asyncio
+from fastapi import FastAPI, Request, HTTPException, BackgroundTasks, Query
 from fastapi.responses import JSONResponse
-from typing import List, Optional
+from fastapi.responses import StreamingResponse
+from typing import List, Optional, AsyncGenerator
 from pathlib import Path
+import json
 
 from .app_config import get_config
 from .core.scanner import FileScanner
@@ -27,7 +30,11 @@ logger = logging.getLogger(__name__)
 
 
 app = FastAPI(title="Disk Explorer")
-scanner = FileScanner()
+scanner = FileScanner(
+    progress_file="progress.json",
+    result_file="results.json",
+    max_workers=2  # Optional: customize number of workers
+)
 video_analyzer = VideoAnalyzer(config.FFMPEG_PATH)
 file_ops = FileOperations()
 
@@ -44,22 +51,64 @@ async def global_exception_handler(request: Request, exc: Exception):
 def read_root():
     return {"message": "Running..!"}
 
-@app.get("/scan/{path:path}", response_model=List[FileInfo])
-async def scan_directory(path: str, include_video_metadata: bool = False):
-    """Scan directory and return file information"""
-    try:
-        files = await scanner.scan_directory(path)
-        
-        if include_video_metadata:
-            for file in files:
-                if file.mime_type.startswith('video/'):
-                    video_meta = await video_analyzer.get_video_metadata(Path(file.path))
-                    if video_meta:
-                        file.video_metadata = video_meta
-        
-        return files
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@app.get("/scan/{path:path}")
+async def scan_directory(
+    path: str,
+    background_tasks: BackgroundTasks,
+    exclude_dirs: Optional[List[str]] = Query(default=None),
+    include_hash: bool = Query(default=True),
+    batch_size: int = Query(default=100, gt=0, le=1000)
+):
+    """
+    Start scanning directory in the background with configurable options.
+    
+    Args:
+        path: Directory path to scan
+        exclude_dirs: Optional list of directory names to exclude
+        include_hash: Whether to compute file hashes (can be slow for large files)
+        batch_size: Number of files to process before writing results
+    """
+    async def scan_task():
+        results = []
+        try:
+            async for metadata in scanner.scan_directory(
+                path,
+                exclude_dirs=set(exclude_dirs) if exclude_dirs else None,
+                include_hash=include_hash
+            ):
+                results.append(metadata.dict())
+                if len(results) >= batch_size:
+                    scanner.write_results(results, append=True)
+                    results = []
+                    
+            if results:  # Write any remaining results
+                scanner.write_results(results, append=True)
+                
+        except Exception as e:
+            logger.error(f"Scan failed: {str(e)}", exc_info=True)
+            scanner.update_progress()  # Now just updating progress without error parameter
+            scanner._last_error = str(e)  # Set the error directly
+            
+    background_tasks.add_task(scan_task)
+    return {
+        "message": "Scan started",
+        "status_endpoint": "/progress",
+        "results_endpoint": "/results"
+    }
+
+@app.get("/progress")
+async def get_progress():
+    """Return current progress."""
+    return scanner.get_progress()
+
+@app.get("/results")
+async def get_results():
+    """Return completed scan results."""
+    result_file = Path(scanner.result_file)
+    if result_file.exists():
+        with open(result_file, 'r') as f:
+            return json.load(f)
+    return {"message": "No results available yet."}
 
 @app.post("/files/delete")
 async def delete_files(files: List[str]):
