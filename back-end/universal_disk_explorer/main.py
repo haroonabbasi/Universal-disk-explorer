@@ -3,6 +3,7 @@ import asyncio
 from fastapi import FastAPI, Request, HTTPException, BackgroundTasks, Query
 from fastapi.responses import JSONResponse
 from fastapi.responses import StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional, AsyncGenerator
 from pathlib import Path
 import json
@@ -30,6 +31,20 @@ logger = logging.getLogger(__name__)
 
 
 app = FastAPI(title="Disk Explorer")
+
+# Allow requests from Tauri frontend (example: http://localhost:1420)
+origins = [
+    "http://localhost:1420",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 scanner = FileScanner(
     progress_file="progress.json",
     result_file="results.json",
@@ -111,9 +126,9 @@ async def get_results():
     return {"message": "No results available yet."}
 
 @app.post("/files/delete")
-async def delete_files(files: List[str]):
+async def delete_files(files: List[str], delete_permanently: bool = False):
     """Delete multiple files"""
-    return await file_ops.delete_files(files)
+    return await file_ops.delete_files(files, delete_permanently)
 
 @app.post("/files/move")
 async def move_files(files: List[str], target_directory: str):

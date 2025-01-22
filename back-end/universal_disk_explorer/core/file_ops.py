@@ -1,21 +1,26 @@
 import os
 import shutil
 from pathlib import Path
+import send2trash
 from typing import List, Union, Dict
 import aiofiles
 import asyncio
 
 class FileOperations:
     @staticmethod
-    async def delete_files(files: List[Union[str, Path]]) -> Dict[str, str]:
-        """Delete multiple files and return status"""
+    async def delete_files(files: List[str], delete_permanently: bool = True) -> Dict[str, str]:
+        """Delete multiple files with optional permanent deletion"""
         results = {}
         for file_path in files:
             path = Path(file_path)
             try:
                 if path.is_file():
-                    await asyncio.to_thread(path.unlink)
-                    results[str(path)] = "deleted"
+                    if delete_permanently:
+                        path.unlink()  # Permanent deletion
+                        results[str(path)] = "deleted permanently"
+                    else:
+                        send2trash.send2trash(str(path))  # Send to Recycle Bin
+                        results[str(path)] = "moved to Recycle Bin"
                 else:
                     results[str(path)] = "not a file"
             except Exception as e:

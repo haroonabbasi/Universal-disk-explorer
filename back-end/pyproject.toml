@@ -5,7 +5,7 @@ description = "Universal Disk explorer with advanced file and video analysis cap
 authors = ["Haroon Abbasi <haroonabbasi.ali@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.12"  # Updated to match your Python version
+python = ">=3.12,<3.13"  # Specify exact Python version range
 fastapi = "^0.100.0"
 uvicorn = {extras = ["standard"], version = "^0.22.0"}
 aiofiles = "^23.1.0"
@@ -16,6 +16,7 @@ imagehash = "^4.3.1"
 python-magic = "^0.4.27"
 pydantic = "^2.0.0"
 pydantic-settings = "^2.7.1"
+send2trash = "^1.8.0"  # Specify the version if needed
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.3.1"
