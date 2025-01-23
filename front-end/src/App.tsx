@@ -1,12 +1,20 @@
-// src/App.tsx
 import { useState, useEffect } from 'react';
 import { invoke } from "@tauri-apps/api/core";
-import { Layout, Select, Button, Table, Input, Progress, message } from 'antd';
-import { FolderOpenOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import { Layout, Select, Button, Table, Input, Progress, message, theme, Menu } from 'antd';
+import {
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  FolderOpenOutlined,
+  DeleteOutlined,
+  SearchOutlined,
+  DashboardOutlined,
+  FileSearchOutlined,
+  SettingOutlined
+} from '@ant-design/icons';
 import axios from 'axios';
 import './App.css';
 
-const { Header, Content, Footer } = Layout;
+const { Header, Content, Footer, Sider } = Layout;
 
 interface ScanProgress {
   total_files: number;
@@ -31,6 +39,7 @@ interface FileInfo {
 }
 
 function App() {
+  const [collapsed, setCollapsed] = useState(false);
   const [drives, setDrives] = useState<string[]>([]);
   const [selectedPath, setSelectedPath] = useState<string>('');
   const [progress, setProgress] = useState<ScanProgress | null>(null);
@@ -40,11 +49,14 @@ function App() {
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [messageApi, contextHolder] = message.useMessage();
 
+  const {
+    token: { colorBgContainer, borderRadiusLG },
+  } = theme.useToken();
+
   // Fetch available drives on mount
   useEffect(() => {
     const getDrives = async () => {
       try {
-        // Updated Tauri 2.0 invoke pattern
         const driveList = await invoke<string[]>('get_drives');
         setDrives(driveList);
       } catch (error) {
@@ -58,7 +70,6 @@ function App() {
 
   const handleSelectFolder = async () => {
     try {
-      // Using Tauri 2.0 dialog command
       const selected = await invoke<string>('select_folder');
       if (selected) {
         setSelectedPath(selected);
@@ -171,96 +182,142 @@ function App() {
   return (
     <>
       {contextHolder}
-      <Layout className="min-h-screen">
-        <Header className="flex items-center justify-between px-6">
-          <h1 className="text-white text-xl m-0">Universal Disk Explorer</h1>
-        </Header>
-
-        <Content className="p-6">
-          <div className="mb-6 text-center">
-            <div className="flex justify-center gap-4 mb-4">
-              <Select
-                style={{ width: 200 }}
-                placeholder="Select Drive"
-                onChange={setSelectedPath}
-                options={drives.map(drive => ({ label: drive, value: drive }))}
-              />
-              
-              <Button 
-                icon={<FolderOpenOutlined />}
-                onClick={handleSelectFolder}
-              >
-                Select Folder
-              </Button>
-              
+      <Layout style={{ minHeight: '100vh' }}>
+        <Sider trigger={null} collapsible collapsed={collapsed}>
+          <div className="demo-logo-vertical" />
+          <div className="text-white text-center py-4 px-2 overflow-hidden whitespace-nowrap">
+            {!collapsed && 'Universal Disk Explorer'}
+          </div>
+          <Menu
+            theme="dark"
+            mode="inline"
+            defaultSelectedKeys={['1']}
+            items={[
+              {
+                key: '1',
+                icon: <DashboardOutlined />,
+                label: 'Dashboard',
+              },
+              {
+                key: '2',
+                icon: <FileSearchOutlined />,
+                label: 'File Explorer',
+              },
+              {
+                key: '3',
+                icon: <SettingOutlined />,
+                label: 'Settings',
+              },
+            ]}
+          />
+        </Sider>
+        <Layout>
+          <Header style={{ padding: 0, background: colorBgContainer }}>
+            <div className="flex justify-between items-center px-4">
               <Button
-                type="primary"
-                loading={loading}
-                onClick={startScan}
-                disabled={!selectedPath}
-              >
-                Start Scan
-              </Button>
+                type="text"
+                icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                onClick={() => setCollapsed(!collapsed)}
+                style={{
+                  fontSize: '16px',
+                  width: 64,
+                  height: 64,
+                }}
+              />
+              <div className="flex gap-4">
+                <Select
+                  style={{ width: 200 }}
+                  placeholder="Select Drive"
+                  onChange={setSelectedPath}
+                  options={drives.map(drive => ({ label: drive, value: drive }))}
+                />
+                
+                <Button 
+                  icon={<FolderOpenOutlined />}
+                  onClick={handleSelectFolder}
+                >
+                  Select Folder
+                </Button>
+                
+                <Button
+                  type="primary"
+                  loading={loading}
+                  onClick={startScan}
+                  disabled={!selectedPath}
+                >
+                  Start Scan
+                </Button>
+              </div>
             </div>
+          </Header>
 
+          <Content
+            style={{
+              margin: '24px 16px',
+              padding: 24,
+              minHeight: 280,
+              background: colorBgContainer,
+              borderRadius: borderRadiusLG,
+            }}
+          >
             {selectedPath && (
-              <div className="text-gray-500">
+              <div className="text-gray-500 mb-4">
                 Selected: {selectedPath}
               </div>
             )}
-          </div>
 
-          {progress && (
-            <div className="mb-6 text-center">
-              <Progress 
-                percent={progress.progress_percentage} 
-                status={loading ? 'active' : 'normal'}
-              />
-              <div className="mt-2 text-gray-500">
-                {progress.processed_files} / {progress.total_files} files processed
-                ({progress.progress_percentage.toFixed(1)}%)
-              </div>
-            </div>
-          )}
-
-          {files.length > 0 && (
-            <div>
-              <div className="flex justify-between mb-4">
-                <Input
-                  placeholder="Search files..."
-                  prefix={<SearchOutlined />}
-                  value={searchText}
-                  onChange={e => setSearchText(e.target.value)}
-                  style={{ maxWidth: 300 }}
+            {progress && (
+              <div className="mb-6">
+                <Progress 
+                  percent={progress.progress_percentage} 
+                  status={loading ? 'active' : 'normal'}
                 />
-                
-                <Button
-                  danger
-                  icon={<DeleteOutlined />}
-                  onClick={handleDelete}
-                  disabled={selectedRowKeys.length === 0}
-                >
-                  Delete Selected ({selectedRowKeys.length})
-                </Button>
+                <div className="mt-2 text-gray-500">
+                  {progress.processed_files} / {progress.total_files} files processed
+                  ({progress.progress_percentage.toFixed(1)}%)
+                </div>
               </div>
+            )}
 
-              <Table
-                rowKey="path"
-                columns={columns}
-                dataSource={files}
-                rowSelection={{
-                  selectedRowKeys,
-                  onChange: (keys) => setSelectedRowKeys(keys as string[]),
-                }}
-                pagination={{ pageSize: 50 }}
-              />
-            </div>
-          )}
-        </Content>
+            {files.length > 0 && (
+              <div>
+                <div className="flex justify-between mb-4">
+                  <Input
+                    placeholder="Search files..."
+                    prefix={<SearchOutlined />}
+                    value={searchText}
+                    onChange={e => setSearchText(e.target.value)}
+                    style={{ maxWidth: 300 }}
+                  />
+                  
+                  <Button
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={handleDelete}
+                    disabled={selectedRowKeys.length === 0}
+                  >
+                    Delete Selected ({selectedRowKeys.length})
+                  </Button>
+                </div>
 
-        <Footer className="text-center">
-          Universal Disk Explorer ©2025
-        </Footer>
+                <Table
+                  rowKey="path"
+                  columns={columns}
+                  dataSource={files}
+                  rowSelection={{
+                    selectedRowKeys,
+                    onChange: (keys) => setSelectedRowKeys(keys as string[]),
+                  }}
+                  pagination={{ pageSize: 50 }}
+                />
+              </div>
+            )}
+          </Content>
+
+          <Footer style={{ textAlign: 'center' }}>
+            Universal Disk Explorer ©2025
+          </Footer>
+        </Layout>
       </Layout>
     </>
   );
