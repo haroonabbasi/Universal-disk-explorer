@@ -1,9 +1,7 @@
-import os
 import shutil
 from pathlib import Path
 import send2trash
 from typing import List, Union, Dict
-import aiofiles
 import asyncio
 
 class FileOperations:
