@@ -12,6 +12,7 @@ import {
   SettingOutlined
 } from '@ant-design/icons';
 import axios from 'axios';
+import { open } from '@tauri-apps/plugin-dialog';
 import './App.css';
 
 const { Header, Content, Footer, Sider } = Layout;
@@ -70,10 +71,19 @@ function App() {
 
   const handleSelectFolder = async () => {
     try {
-      const selected = await invoke<string>('select_folder');
+      // const selected = await invoke<string>('select_folder');
+      // if (selected) {
+      //   setSelectedPath(selected);
+      // }
+      // Open a dialog
+      const selected = await open({
+        multiple: false,
+        directory: true,
+      });
       if (selected) {
         setSelectedPath(selected);
-      }
+      }      
+      console.log(selected);      
     } catch (error) {
       messageApi.error('Failed to select folder');
       console.error('Folder selection error:', error);
