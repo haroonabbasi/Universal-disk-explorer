@@ -46,12 +46,15 @@ Pending feature:
 
 [x] front-end app should show current drive list
 [] front-end app show dailog box to select folder
-[] front-end app should also have way to show select from scan history
+[] front-end app should also have way to select from scan history
 [] front-end app should also have recent path scanned as history
 [] back-end app - save scanned result in database in history that can be loaded on front-end at any point.
 [] back-end app - also if input path is same as before and in history it exist and if folder size and number of file is currently same as beforet send result from database rather then doing the scan again.
 [] back-end app - create history of file operation perform (may be to track down if any file was deleted by mistake)
-
+[] front-end app - UI configurations
+[] front-end app - dashboard can show option of scan and few stats
+[] front-end app - File explorer can show scan details
+[] front-end app - setting can show any kind of setting in future
 
 ##  License
 This project is licensed under the MIT License. 

@@ -40,6 +40,7 @@ fn select_folder() -> Option<String> {
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![get_drives, select_folder])
         .run(tauri::generate_context!())
         .expect("error while running Tauri application");
