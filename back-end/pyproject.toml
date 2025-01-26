@@ -23,6 +23,7 @@ pytest = "^7.3.1"
 pytest-asyncio = "^0.21.1"
 black = "^23.7.0"
 isort = "^5.12.0"
+debugpy = "^1.8.12"
 
 [build-system]
 requires = ["poetry-core"]

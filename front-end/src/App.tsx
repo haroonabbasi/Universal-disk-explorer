@@ -105,6 +105,10 @@ function FileExplorerApp() {
         if (data.status === "complete") {
           clearInterval(interval);
           fetchResults();
+        } else if(data.status === "error"){
+          clearInterval(interval);
+          setLoading(false);
+          messageApi.error("Scanned Failed - " + data.error);
         }
       } catch (error) {
         clearInterval(interval);
@@ -178,10 +182,11 @@ function FileExplorerApp() {
     total_files: number;
     processed_files: number;
     progress_percentage: number;
-    status: "scanning" | "complete";
+    status: "scanning" | "complete" | "error";
     elapsed_time: string;
     estimated_time_remaining: string;
     files_per_second: number;
+    error: string;
   }
   
   interface FileInfo {

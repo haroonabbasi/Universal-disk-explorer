@@ -7,6 +7,7 @@ class AppConfig(BaseSettings):
     APP_NAME: str = "universal-disk-explorer"
     DEBUG: bool = False
     FFMPEG_PATH: str
+    FFPROBE_PATH: str
 
     class Config:
         env_file = ".env"

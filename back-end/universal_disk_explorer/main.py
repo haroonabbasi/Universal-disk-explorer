@@ -1,7 +1,6 @@
 import logging
 from fastapi import FastAPI, Request, HTTPException, BackgroundTasks, Query
 from fastapi.responses import JSONResponse
-from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 from pathlib import Path
@@ -44,12 +43,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+video_analyzer = VideoAnalyzer(config.FFMPEG_PATH, config.FFPROBE_PATH)
 scanner = FileScanner(
-    progress_file="progress.json",
-    result_file="results.json",
+    progress_file="./output/progress.json",
+    result_file="./output/results.json",
     max_workers=2  # Optional: customize number of workers
 )
-video_analyzer = VideoAnalyzer(config.FFMPEG_PATH)
 file_ops = FileOperations()
 
 
@@ -71,7 +70,8 @@ async def scan_directory(
     background_tasks: BackgroundTasks,
     exclude_dirs: Optional[List[str]] = Query(default=None),
     include_hash: bool = Query(default=True),
-    batch_size: int = Query(default=100, gt=0, le=1000)
+    batch_size: int = Query(default=100, gt=0, le=1000),
+    generate_video_screenshots: bool = Query(default=True)
 ):
     """
     Start scanning directory in the background with configurable options.
@@ -81,14 +81,17 @@ async def scan_directory(
         exclude_dirs: Optional list of directory names to exclude
         include_hash: Whether to compute file hashes (can be slow for large files)
         batch_size: Number of files to process before writing results
+        generate_video_screenshots: Whether to generate screenshots for video files
     """
     async def scan_task():
         results = []
         try:
             async for metadata in scanner.scan_directory(
                 path,
-                exclude_dirs=set(exclude_dirs) if exclude_dirs else None,
-                include_hash=include_hash
+                exclude_dirs=set(exclude_dirs) if exclude_dirs else {'.git', 'node_modules', 'venv'},
+                exclude_patterns={'.DS_Store', '*.tmp', '*.log', 'thumbs.db'},                
+                include_hash=include_hash,
+                generate_video_screenshots=generate_video_screenshots
             ):
                 results.append(metadata.dict())
                 if len(results) >= batch_size:
@@ -100,8 +103,8 @@ async def scan_directory(
                 
         except Exception as e:
             logger.error(f"Scan failed: {str(e)}", exc_info=True)
-            scanner.update_progress()  # Now just updating progress without error parameter
-            scanner._last_error = str(e)  # Set the error directly
+            scanner._last_error = str(e)
+            scanner.update_progress()
             
     background_tasks.add_task(scan_task)
     return {

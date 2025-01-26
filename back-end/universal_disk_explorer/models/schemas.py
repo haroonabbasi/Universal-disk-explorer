@@ -13,6 +13,7 @@ class FileMetadata(BaseModel):
     hash: Optional[str] = None
     perceptual_hash: Optional[str] = None
     is_directory: bool
+    video_screenshots: List[str]
 
 class VideoMetadata(BaseModel):
     width: Optional[int] = None
@@ -24,3 +25,18 @@ class VideoMetadata(BaseModel):
     
 class FileInfo(FileMetadata):
     video_metadata: Optional[VideoMetadata] = None
+
+class ProgressModel(BaseModel):
+    total_files: int
+    processed_files: int
+    progress_percentage: float
+    status: str
+    elapsed_time: Optional[str] = None
+    estimated_time_remaining: Optional[str] = None
+    files_per_second: Optional[float] = None
+    error: Optional[str] = None
+
+    # Ensure JSON serialization works correctly
+    def model_dump(self, **kwargs):
+        """Override model_dump to ensure compatibility with JSON serialization"""
+        return super().model_dump(mode='json', **kwargs)

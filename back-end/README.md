@@ -166,3 +166,11 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 - [ffmpeg-python](https://github.com/kkroening/ffmpeg-python) for video processing
 - [Pillow](https://python-pillow.org/) for image processing
 - [python-magic](https://github.com/ahupp/python-magic) for file type detection
+
+
+
+
+# Debugging knowlege (will organize thoughts later to create proper instructions for debugging)
+Ensure VSCode Uses the Poetry Environment
+$ poetry env info --path
+/Users/haroonabbasi/Library/Caches/pypoetry/virtualenvs/universal-disk-explorer-fTv5dNzX-py3.12
