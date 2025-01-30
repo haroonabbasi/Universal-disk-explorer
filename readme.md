@@ -45,7 +45,7 @@ Refer to the [Front-End README](./front-end/README.md) for development environme
 Pending feature:
 
 [x] front-end app should show current drive list
-[] front-end app show dailog box to select folder
+[x] front-end app show dailog box to select folder
 [] front-end app should also have way to select from scan history
 [] front-end app should also have recent path scanned as history
 [] back-end app - save scanned result in database in history that can be loaded on front-end at any point.
@@ -55,6 +55,7 @@ Pending feature:
 [] front-end app - dashboard can show option of scan and few stats
 [] front-end app - File explorer can show scan details
 [] front-end app - setting can show any kind of setting in future
+[] feature to show top 1000 large size files
 
 ##  License
 This project is licensed under the MIT License. 

@@ -80,7 +80,7 @@ class FileScanner:
         try:
             stat = path.stat()
             mime = magic.Magic(mime=True)
-            
+
             metadata = FileMetadata(
                 path=str(path),
                 name=path.name,
@@ -90,28 +90,27 @@ class FileScanner:
                 file_type=path.suffix.lower(),
                 mime_type=await asyncio.to_thread(mime.from_file, str(path)),
                 is_directory=path.is_dir(),
-                video_screenshots=[]
+                video_metadata=None
             )
-            
+
             if not metadata.is_directory and include_hash:
                 metadata.hash = await self.compute_file_hash(path)
 
-            # Check if it's a video file and generate screenshots
-            if generate_video_screenshots and metadata and not metadata.is_directory:
-                video_extensions = {'.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv'}
-                if metadata.file_type.lower() in video_extensions:
-                    try:
-                        screenshots = await self.video_analyzer.generate_screenshots(str(path))
-                        metadata.video_screenshots = screenshots
-                    except Exception as e:
-                        logger.error(f"Failed to generate screenshots for {path}: {e}")
-                        metadata.video_screenshots = []                
-            
+            # Check if it's a video file
+            logger.info("reach here")
+            video_extensions = {'.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv'}
+            if metadata.file_type.lower() in video_extensions:
+                logger.info("reach here 1")
+                metadata.video_metadata = await self.video_analyzer.get_video_metadata(
+                    path, generate_screenshots=generate_video_screenshots
+                )
+                logger.info("reach here 555")
+
             self.processed_files += 1
             self.update_progress()
-            
+
             return metadata
-            
+
         except (PermissionError, FileNotFoundError, OSError) as e:
             logger.error(f"Error getting metadata for {path}: {str(e)}")
             self.processed_files += 1

@@ -10,7 +10,7 @@ from .app_config import get_config
 from .core.scanner import FileScanner
 from .core.video import VideoAnalyzer
 from .core.file_ops import FileOperations
-from .models.schemas import FileInfo, FileMetadata
+from .models.schemas import FileMetadata
 
 
 config = get_config()  # The same cached instance will be returned

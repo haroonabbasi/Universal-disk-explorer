@@ -2,6 +2,17 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict
 from datetime import datetime
 
+class VideoMetadata(BaseModel):
+    width: Optional[int] = None
+    height: Optional[int] = None
+    duration: Optional[float] = None
+    bitrate: Optional[int] = None
+    codec: Optional[str] = None
+    fps: Optional[float] = None
+    file_size: Optional[int] = None  # File size in bytes
+    is_low_quality: Optional[bool] = None  # Flag to indicate low quality
+    video_screenshots: List[str] = []  # Screenshots for video files
+
 class FileMetadata(BaseModel):
     path: str
     name: str
@@ -13,18 +24,7 @@ class FileMetadata(BaseModel):
     hash: Optional[str] = None
     perceptual_hash: Optional[str] = None
     is_directory: bool
-    video_screenshots: List[str]
-
-class VideoMetadata(BaseModel):
-    width: Optional[int] = None
-    height: Optional[int] = None
-    duration: Optional[float] = None
-    bitrate: Optional[int] = None
-    codec: Optional[str] = None
-    fps: Optional[float] = None
-    
-class FileInfo(FileMetadata):
-    video_metadata: Optional[VideoMetadata] = None
+    video_metadata: Optional[VideoMetadata] = None  # Video-specific metadata
 
 class ProgressModel(BaseModel):
     total_files: int
