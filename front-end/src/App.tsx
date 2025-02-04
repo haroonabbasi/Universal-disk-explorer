@@ -30,6 +30,8 @@ import { open } from '@tauri-apps/plugin-dialog';
 import axios from 'axios';
 import { ScanProgress, FileInfo } from "./interfaces";
 import { DataNode } from 'antd/es/tree';
+import FilesTable from './components/FilesTable';
+import FilesGrid from './components/FilesGrid';
 
 const { Header, Content, Footer, Sider } = Layout;
 const { useToken } = theme;
@@ -320,70 +322,6 @@ function FileExplorerApp() {
   );
 
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-  const formatSize = (bytes: number): string => {
-    const sizes = ["B", "KB", "MB", "GB", "TB"];
-    if (bytes === 0) return "0 B";
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
-  };
-  // Column definition for Table
-  const columns = [
-    {
-      title: "Name",
-      dataIndex: "name",
-      sorter: (a: FileInfo, b: FileInfo) => a.name.localeCompare(b.name)
-    },
-    {
-      title: "Size",
-      dataIndex: "size",
-      render: (size: number) => formatSize(size),
-      sorter: (a: FileInfo, b: FileInfo) => a.size - b.size
-    },
-    {
-      title: "Type",
-      dataIndex: "file_type",
-      sorter: (a: FileInfo, b: FileInfo) => (a.file_type || "").localeCompare(b.file_type || "")
-    },
-    {
-      title: "Modified",
-      dataIndex: "modified_time",
-      render: (date: string) => new Date(date).toLocaleDateString()
-    },
-  ];
-
-  // const buildFolderTree = (files: FileInfo[]) => {
-  //   const root = {};
-  
-  //   files.forEach(file => {
-  //     const parts = file.path.split('/').filter(part => part !== '');
-  //     let currentLevel = root;
-  
-  //     parts.forEach((part, index) => {
-  //       if (!currentLevel[part]) {
-  //         currentLevel[part] = {};
-  //       }
-  //       currentLevel = currentLevel[part];
-  //     });
-  //   });
-  
-  //   return root;
-  // };
-  
-  // const convertToTreeData = (node: Record<string, any>, path: string = '') => {
-  //   return Object.keys(node).map(key => {
-  //     const fullPath = path ? `${path}/${key}` : key;
-  //     return {
-  //       title: key,
-  //       key: fullPath,
-  //       children: convertToTreeData(node[key], fullPath),
-  //     };
-  //   });
-  // };
-
-  // const getFolderTree = (files: FileInfo[]) => {
-  //   const folderStructure = buildFolderTree(files);
-  //   return convertToTreeData(folderStructure);
-  // };
 
   // useEffect(() => {
   //   if (files.length > 0) {
@@ -392,30 +330,15 @@ function FileExplorerApp() {
   //     setFilteredFiles(files); // Show all files by default
   //   }
   // }, [files]);
-
-  // const handleFolderSelect = (selectedKeys: any[]) => {
-  //   const selectedPath = selectedKeys[0];
-  //   setSelectedPath(selectedPath);
-  
-  //   if (selectedPath === "ALL") {
-  //     setFilteredFiles(files); // Show all files
-  //   } else {
-  //     const filtered = filterFilesByFolder(files, selectedPath);
-  //     setFilteredFiles(filtered);
-  //   }
-  // };
-  
-  // const filterFilesByFolder = (files: FileInfo[], folderPath: string) => {
-  //   return files.filter(file => file.path.startsWith(folderPath));
-  // };
-
   const [filteredFiles, setFilteredFiles] = useState<FileInfo[]>([]);
-  const [folderTree, setFolderTree] = useState<DataNode>();
-  
-  const handleFolderSelect = (selectedKeys: any[]) => {
+  const [folderTree, setFolderTree] = useState<DataNode[]>();
+
+  const handleFolderSelect = (selectedKeys) => {
+    if (selectedKeys.length === 0) return; // Safeguard: Exit if no folder is selected
+
     const selectedPath = selectedKeys[0];
     setSelectedPath(selectedPath);
-  
+
     if (selectedPath === "ALL") {
       setFilteredFiles(files); // Show all files
     } else {
@@ -423,32 +346,40 @@ function FileExplorerApp() {
       setFilteredFiles(filtered);
     }
   };
-  
+
   const filterFilesByFolder = (files: FileInfo[], folderPath: string) => {
-    return files.filter(file => file.path.startsWith(folderPath));
+    if (!folderPath) return files; // Safeguard: Return all files if folderPath is undefined
+
+    // Normalize the folder path to ensure it ends with a '/'
+    const normalizedFolderPath = folderPath.endsWith('/') ? folderPath : `${folderPath}/`;
+
+    // Filter files that are in the selected folder or its subfolders
+    return files.filter(file => file.path.startsWith(normalizedFolderPath));
   };
-  
+
   const buildFolderTree = (files: FileInfo[]) => {
     const root = {};
-  
+
     files.forEach(file => {
-      const parts = file.path.split('/').filter(part => part !== '');
+      const parts = file.path.split('/').filter(part => part !== ''); // Split path into components
       let currentLevel = root;
-  
-      parts.forEach((part, index) => {
+
+      // Traverse the path and build the folder structure
+      for (let i = 0; i < parts.length - 1; i++) { // Skip the last part (file name)
+        const part = parts[i];
         if (!currentLevel[part]) {
           currentLevel[part] = {};
         }
         currentLevel = currentLevel[part];
-      });
+      }
     });
-  
+
     return root;
   };
-  
+
   const convertToTreeData = (node: Record<string, any>, path: string = '') => {
     return Object.keys(node).map(key => {
-      const fullPath = path ? `${path}/${key}` : key;
+      const fullPath = path ? `${path}/${key}` : `/${key}`; // Ensure keys start with '/'
       return {
         title: key,
         key: fullPath,
@@ -456,50 +387,23 @@ function FileExplorerApp() {
       };
     });
   };
-  
   const getFolderTree = (files: FileInfo[]) => {
     const folderStructure = buildFolderTree(files);
     return convertToTreeData(folderStructure);
   };
-  
+
   useEffect(() => {
     if (files.length > 0) {
       const treeData = getFolderTree(files);
+      console.log('treeData:', treeData);
+      console.log('treeData:', JSON.stringify(treeData));
       setFolderTree([{ title: "All", key: "ALL", children: treeData }]);
       setFilteredFiles(files); // Show all files by default
     }
   }, [files]);
 
   const renderFileView = () => (
-    viewMode === "list" ? <FileList files={filteredFiles} /> : <FileGrid files={filteredFiles} />
-  );
-  const FileList = ({ files: FileInfo }) => (
-    <Table
-      rowKey="path"
-      columns={[
-        { title: "Name", dataIndex: "name", sorter: (a, b) => a.name.localeCompare(b.name) },
-        { title: "Size", dataIndex: "size", render: (size) => formatSize(size), sorter: (a, b) => a.size - b.size },
-        { title: "Type", dataIndex: "file_type", sorter: (a, b) => (a.file_type || "").localeCompare(b.file_type || "") },
-        { title: "Modified", dataIndex: "modified_time", render: (date) => new Date(date).toLocaleDateString() },
-      ]}
-      dataSource={files}
-      pagination={{ pageSize: 50 }}
-    />
-  );
-
-  const FileGrid = ({ files: FileInfo }) => (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-      {files.map((file: FileInfo) => (
-        <Card key={file.path} style={{ width: 200 }}>
-          {file.file_type === ".mp4" ? (
-            <video src={file.path} style={{ width: "100%", height: "auto" }} />
-          ) : (
-            <img src={file.path} alt={file.name} style={{ width: "100%", height: "auto" }} />
-          )}
-          <p>{file.name}</p>
-        </Card>
-      ))}
-    </div>
+    viewMode === "list" ? <FilesTable files={files} onDelete={handleDelete} theme={token} /> : <FilesGrid files={files} onDelete={handleDelete} theme={theme} />
   );
 
   const renderFileExplorer = () => (
@@ -527,47 +431,6 @@ function FileExplorerApp() {
           {renderFileView()}
         </Content>
       </Layout>
-      {/* <Input
-        prefix={<SearchOutlined />}
-        placeholder="Search files..."
-        value={searchText}
-        onChange={e => setSearchText(e.target.value)}
-        style={{
-          marginBottom: 16,
-          background: token.colorBgContainer,
-          borderColor: token.colorBorderSecondary
-        }}
-      />
-      <Table
-        rowKey="path"
-        columns={columns}
-        dataSource={files}
-        rowSelection={{
-          selectedRowKeys,
-          onChange: keys => setSelectedRowKeys(keys)
-        }}
-        pagination={{ pageSize: 50 }}
-        components={{
-          row: ({ children, ...props }) => (
-            <motion.tr
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.2 }}
-              {...props}
-            >
-              {children}
-            </motion.tr>
-          )
-        }}
-      />
-      <Button
-        danger
-        icon={<DeleteOutlined />}
-        onClick={handleDelete}
-        disabled={selectedRowKeys.length === 0}
-      >
-        Delete Selected ({selectedRowKeys.length})
-      </Button> */}
     </motion.div>
   );
 
