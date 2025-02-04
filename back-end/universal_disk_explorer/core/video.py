@@ -19,8 +19,6 @@ class VideoAnalyzer:
         Args:
             ffmpeg_path (Optional[str]): Path to ffmpeg executable. If None, uses system default
         """
-        logger.info(f"ffmpeg_path: {ffmpeg_path}")
-        logger.info(f"ffprobe_path: {ffprobe_path}")
         self.ffmpeg_path = ffmpeg_path
         self.ffprobe_path = ffprobe_path
         self.screenshot_base_dir = Path("./output/video/screenshots")

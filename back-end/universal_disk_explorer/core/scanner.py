@@ -2,7 +2,7 @@ import os
 import asyncio
 from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Set, AsyncGenerator, Dict, Any, Optional, Union
+from typing import List, Set, AsyncGenerator, Dict, Any, Optional, Union
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import aiofiles
@@ -292,3 +292,143 @@ class FileScanner:
         # Create ProgressModel and return its dictionary representation
         progress_model = ProgressModel(**progress_data)
         return progress_model.model_dump()
+    
+    async def search_directory_with_filters(
+        self,
+        root_path: str,
+        result_file: Path,
+        min_size: Optional[int] = None,
+        max_size: Optional[int] = None,
+        file_types: Optional[List[str]] = None,
+        created_before: Optional[datetime] = None,
+        modified_before: Optional[datetime] = None,
+        low_quality_videos: bool = False,
+        top_n: Optional[int] = None,
+        include_duplicates: bool = False,
+    ):
+        """
+        Perform a background scan with filters and save results to a file.
+        """
+        # Initialize results list
+        results = []
+
+        # Scan the directory and apply filters
+        async for metadata in self.scan_directory(root_path):
+            # Apply size filter
+            if min_size is not None and metadata.size < min_size:
+                continue
+            if max_size is not None and metadata.size > max_size:
+                continue
+
+            # Apply file type filter
+            if file_types and metadata.file_type.lower() not in file_types:
+                continue
+
+            # Apply creation/modification date filter
+            if created_before and metadata.created_time > created_before:
+                continue
+            if modified_before and metadata.modified_time > modified_before:
+                continue
+
+            # Apply low-quality video filter
+            if low_quality_videos and metadata.video_metadata and not metadata.video_metadata.is_low_quality:
+                continue
+
+            # Add to results
+            results.append(metadata.dict())
+
+        # Apply top N filter
+        if top_n:
+            results = sorted(results, key=lambda x: x["size"], reverse=True)[:top_n]
+
+        # Apply duplicate filter (if needed)
+        if include_duplicates:
+            # Group files by hash
+            hash_map = {}
+            for file in results:
+                if file["hash"] not in hash_map:
+                    hash_map[file["hash"]] = []
+                hash_map[file["hash"]].append(file)
+
+            # Only include files with duplicates
+            results = [file for files in hash_map.values() if len(files) > 1 for file in files]
+
+        # Write results to the result file
+        self.write_results(results, result_file)
+
+    async def get_insights(self, root_path: str) -> dict:
+        """
+        Get disk usage insights for a directory.
+        """
+        total_size = 0
+        file_count = 0
+        file_type_count = {}
+        largest_files = []
+        oldest_files = []
+        low_quality_videos = []
+
+        async for metadata in self.scan_directory(root_path):
+            total_size += metadata.size
+            file_count += 1
+
+            # Update file type count
+            file_type = metadata.file_type.lower()
+            file_type_count[file_type] = file_type_count.get(file_type, 0) + 1
+
+            # Track largest files
+            largest_files.append(metadata.dict())
+            if len(largest_files) > 10:
+                largest_files = sorted(largest_files, key=lambda x: x["size"], reverse=True)[:10]
+
+            # Track oldest files
+            oldest_files.append(metadata.dict())
+            if len(oldest_files) > 10:
+                oldest_files = sorted(oldest_files, key=lambda x: x["modified_time"])[:10]
+
+            # Track low-quality videos
+            if metadata.video_metadata and metadata.video_metadata.is_low_quality:
+                low_quality_videos.append(metadata.dict())
+
+        return {
+            "total_size": total_size,
+            "file_count": file_count,
+            "file_type_count": file_type_count,
+            "largest_files": sorted(largest_files, key=lambda x: x["size"], reverse=True)[:10],
+            "oldest_files": sorted(oldest_files, key=lambda x: x["modified_time"])[:10],
+            "low_quality_videos": low_quality_videos,
+        }
+    
+    async def find_duplicates(self, root_path: str) -> dict:
+        """
+        Find duplicate files in a directory.
+        """
+        hash_map = {}
+
+        async for metadata in self.scan_directory(root_path):
+            if metadata.hash:
+                if metadata.hash not in hash_map:
+                    hash_map[metadata.hash] = []
+                hash_map[metadata.hash].append(metadata.dict())
+
+        # Filter out non-duplicates
+        duplicates = {hash: files for hash, files in hash_map.items() if len(files) > 1}
+
+        return duplicates
+    
+    async def find_aging_files(self, root_path: str, days: int, mode: str) -> List[dict]:
+        """
+        Find files that haven't been accessed/modified in a specified number of days.
+        """
+        aging_files = []
+        cutoff_date = datetime.now() - timedelta(days=days)
+
+        async for metadata in self.scan_directory(root_path):
+            if mode == "accessed":
+                last_used = metadata.accessed_time  # Note: You may need to add accessed_time to FileMetadata
+            else:
+                last_used = metadata.modified_time
+
+            if last_used and last_used < cutoff_date:
+                aging_files.append(metadata.dict())
+
+        return aging_files    

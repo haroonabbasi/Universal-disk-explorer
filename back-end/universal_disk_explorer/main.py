@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 from pathlib import Path
+from datetime import datetime
 import json
 
 from .app_config import get_config
@@ -126,6 +127,90 @@ async def get_results():
         with open(result_file, 'r') as f:
             return json.load(f)
     return {"message": "No results available yet."}
+
+@app.get("/search/{path:path}")
+async def search_files(
+    path: str,
+    background_tasks: BackgroundTasks,
+    min_size: Optional[int] = Query(default=None, description="Minimum file size in bytes"),
+    max_size: Optional[int] = Query(default=None, description="Maximum file size in bytes"),
+    file_types: Optional[str] = Query(default=None, description="Comma-separated list of file extensions (e.g., mp4,jpg,pdf)"),
+    created_before: Optional[str] = Query(default=None, description="Find files created before this date (ISO format)"),
+    modified_before: Optional[str] = Query(default=None, description="Find files modified before this date (ISO format)"),
+    low_quality_videos: Optional[bool] = Query(default=False, description="Include only low-quality videos"),
+    top_n: Optional[int] = Query(default=None, description="Return the top N largest files"),
+    include_duplicates: Optional[bool] = Query(default=False, description="Include duplicate files (based on hash)"),
+):
+    """
+    Start a background search for files based on filters.
+    """
+    # Convert query parameters to appropriate types
+    file_types_list = file_types.split(",") if file_types else None
+    created_before_date = datetime.fromisoformat(created_before) if created_before else None
+    modified_before_date = datetime.fromisoformat(modified_before) if modified_before else None
+
+    # Define the result file path
+    result_file = Path("./output/search_results.json")
+
+    # Start the background task
+    background_tasks.add_task(
+        scanner.search_directory_with_filters,
+        path,
+        result_file,
+        min_size=min_size,
+        max_size=max_size,
+        file_types=file_types_list,
+        created_before=created_before_date,
+        modified_before=modified_before_date,
+        low_quality_videos=low_quality_videos,
+        top_n=top_n,
+        include_duplicates=include_duplicates,
+    )
+
+    return {
+        "message": "Search started",
+        "status_endpoint": "/search/progress",
+        "results_endpoint": "/search/results"
+    }
+
+@app.get("/insights/{path:path}")
+async def get_insights(path: str):
+    """
+    Get disk usage insights for a directory.
+    """
+    try:
+        insights = await scanner.get_insights(path)
+        return insights
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+@app.get("/duplicates/{path:path}")
+async def get_duplicates(path: str):
+    """
+    Get duplicate files in a directory.
+    """
+    try:
+        duplicates = await scanner.find_duplicates(path)
+        return duplicates
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+@app.get("/aging/{path:path}")
+async def get_aging_files(
+    path: str,
+    days: int = Query(default=365, description="Number of days since last access/modification"),
+    mode: str = Query(default="modified", description="Mode: 'accessed' or 'modified'"),
+):
+    """
+    Get files that haven't been accessed/modified in a specified number of days.
+    """
+    try:
+        aging_files = await scanner.find_aging_files(path, days, mode)
+        return aging_files
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))    
 
 @app.post("/files/delete")
 async def delete_files(files: List[str], delete_permanently: bool = False):

@@ -28,20 +28,13 @@ fn get_drives() -> Vec<String> {
         // Linux: Check root or other mount points
         drives.push("/".to_string());
     }
-
-    drives
-}
-
-#[tauri::command]
-fn select_folder() -> Option<String> {
-    // Placeholder for folder selection logic
-    Some("/Users/haroonabbasi/Documents/mix".to_string())
+    return drives
 }
 
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![get_drives, select_folder])
+        .invoke_handler(tauri::generate_handler![get_drives])
         .run(tauri::generate_context!())
         .expect("error while running Tauri application");
 }
