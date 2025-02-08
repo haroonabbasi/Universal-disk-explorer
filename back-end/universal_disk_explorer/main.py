@@ -72,7 +72,7 @@ async def scan_directory(
     exclude_dirs: Optional[List[str]] = Query(default=None),
     include_hash: bool = Query(default=True),
     batch_size: int = Query(default=100, gt=0, le=1000),
-    generate_video_screenshots: bool = Query(default=True)
+    generate_video_screenshots: bool = Query(default=False)
 ):
     """
     Start scanning directory in the background with configurable options.

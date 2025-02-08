@@ -1,3 +1,4 @@
+import { Moment } from 'moment';
 
 export interface MenuItem {
   title: string;
@@ -40,4 +41,13 @@ export interface FileInfo {
   perceptual_hash?: string;
   is_directory: boolean;
   video_metadata?: VideoMetadata; // Optional video-specific metadata
+}
+
+export interface Filters {
+  minSize: number | null;           // in MB, later converted to bytes
+  maxSize: number | null;           // in MB, later converted to bytes
+  fileTypes: string[];              // an array of file type identifiers
+  createdBefore: Moment | null;     // using Moment for date objects
+  modifiedBefore: Moment | null;    // using Moment for date objects
+  lowQualityVideos: boolean;        // a boolean flag
 }

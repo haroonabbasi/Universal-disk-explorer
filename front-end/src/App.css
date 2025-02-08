@@ -1,24 +1,33 @@
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafb);
-}
+/* Remove or modify conflicting root defaults */
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
   font-size: 16px;
   line-height: 24px;
   font-weight: 400;
+  /* Remove light text/background colors so that the theme tokens apply */
+}
 
-  color: #0f0f0f;
-  background-color: #f6f6f6;
+/* Let Ant Design style its own inputs and buttons or override with dark colors if needed */
+input,
+button {
+  /* Remove or minimize customizations that conflict with antd */
+  border-radius: 8px; /* you can keep border-radius if it matches your token */
+  /* It’s better to let Ant Design apply its styles via the tokens */
+}
 
+
+/* :root {
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #141414;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
 }
 
 .container {
@@ -30,30 +39,14 @@
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-}
-
 a {
   font-weight: 500;
-  color: #646cff;
+  color: #fa8c16;
   text-decoration: inherit;
 }
 
 a:hover {
-  color: #535bf2;
+  color: #ffa940;
 }
 
 h1 {
@@ -68,10 +61,10 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
+  background-color: #1f1f1f;
   transition: border-color 0.25s;
   box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+  color: #ffffff;
 }
 
 button {
@@ -79,11 +72,12 @@ button {
 }
 
 button:hover {
-  border-color: #396cd8;
+  border-color: #fa8c16;
 }
+
 button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
+  border-color: #fa8c16;
+  background-color: #2f2f2f;
 }
 
 input,
@@ -91,26 +85,19 @@ button {
   outline: none;
 }
 
-#greet-input {
-  margin-right: 5px;
-}
-
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
+    color: #213547;
+    background-color: #ffffff;
   }
 
   a:hover {
-    color: #24c8db;
+    color: #ffa940;
   }
 
   input,
   button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
+    background-color: #f9f9f9;
+    color: #213547;
   }
-  button:active {
-    background-color: #0f0f0f69;
-  }
-}
+} */
