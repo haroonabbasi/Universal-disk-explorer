@@ -1,20 +1,23 @@
 import React, { useState, useMemo } from "react";
-import { Input, Table, Button } from "antd";
-import { SearchOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Input, Table, Button, Col, Dropdown, Menu, Popover, Row } from "antd";
+import { SearchOutlined, DeleteOutlined, MoreOutlined } from "@ant-design/icons";
 import { motion } from "framer-motion";
+import { invoke } from "@tauri-apps/api/core";
+import { FileInfo } from "../interfaces";
+import Thumbnail from "./Thumbnail";
 
 // Define the File interface for TypeScript.
-export interface File {
-  path: string;
-  name: string;
-  size: number;
-  file_type?: string;
-  modified_time: string | number;
-}
+// export interface File {
+//   path: string;
+//   name: string;
+//   size: number;
+//   file_type?: string;
+//   modified_time: string | number;
+// }
 
 // Props for our FilesTable component.
 interface FilesTableProps {
-  files: File[];
+  files: FileInfo[];
   onDelete: (paths: string[]) => void;
   // Optional: you can pass theme tokens if you're using a design system.
   theme?: {
@@ -49,6 +52,71 @@ const FilesTable: React.FC<FilesTableProps> = ({ files, onDelete, theme }) => {
     setSelectedRowKeys([]);
   };
 
+  const handleOpenFile = async (path: string) => {
+    try {
+      await invoke("open_file", { path });
+    } catch (error) {
+      console.error("Error opening file:", error);
+    }
+  };
+
+  const getScreenshots = (file: FileInfo) => {
+    if (file.video_metadata?.video_screenshots?.length) {
+      return file.video_metadata.video_screenshots;
+    }
+    return file.screenshots || [];
+  };
+
+  // const renderScreenshots = (file: FileInfo) => {
+  //   const screenshots = getScreenshots(file);
+  //   if (screenshots.length === 0) return null;
+
+  //   return (
+  //     <Row gutter={4}>
+  //       {screenshots.slice(0, 3).map((src, index) => (
+  //         <Col key={index}>
+  //           <Popover
+  //             content={<img src={src} style={{ maxWidth: 400, maxHeight: 400 }} />}
+  //             trigger="hover"
+  //           >
+  //             <img
+  //               src={src}
+  //               alt={`Preview ${index + 1}`}
+  //               style={{ 
+  //                 width: 50, 
+  //                 height: 50, 
+  //                 objectFit: "cover", 
+  //                 cursor: "pointer",
+  //                 borderRadius: 4 
+  //               }}
+  //             />
+  //           </Popover>
+  //         </Col>
+  //       ))}
+  //     </Row>
+  //   );
+  // };
+  const renderScreenshots = (file: FileInfo) => {
+    const screenshots = getScreenshots(file);
+    
+    return (
+      <Row gutter={4}>
+        {screenshots.slice(0, 3).map((path, index) => (
+          <Col key={index}>
+            <Popover
+              content={<Thumbnail path={path} />}
+              trigger="hover"
+            >
+              <div style={{ cursor: "pointer" }}>
+                <Thumbnail path={path} />
+              </div>
+            </Popover>
+          </Col>
+        ))}
+      </Row>
+    );
+  };
+
   // Define columns with sorters and custom renderers.
   const columns = [
     {
@@ -76,6 +144,27 @@ const FilesTable: React.FC<FilesTableProps> = ({ files, onDelete, theme }) => {
       sorter: (a: File, b: File) =>
         new Date(a.modified_time).getTime() -
         new Date(b.modified_time).getTime(),
+    },
+    {
+      title: 'Screenshots',
+      render: (_: any, record: FileInfo) => renderScreenshots(record),
+    },
+    {
+      title: 'Actions',
+      render: (_: any, record: File) => (
+        <Dropdown
+          overlay={
+            <Menu>
+              <Menu.Item key="open" onClick={() => handleOpenFile(record.path)}>
+                Open
+              </Menu.Item>
+            </Menu>
+          }
+          trigger={['click']}
+        >
+          <Button type="text" icon={<MoreOutlined />} />
+        </Dropdown>
+      ),
     },
   ];
 

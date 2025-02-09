@@ -41,6 +41,7 @@ export interface FileInfo {
   perceptual_hash?: string;
   is_directory: boolean;
   video_metadata?: VideoMetadata; // Optional video-specific metadata
+  screenshots?: string[];
 }
 
 export interface Filters {
@@ -50,4 +51,5 @@ export interface Filters {
   createdBefore: Moment | null;     // using Moment for date objects
   modifiedBefore: Moment | null;    // using Moment for date objects
   lowQualityVideos: boolean;        // a boolean flag
+  previewImage: boolean;        // a boolean flag
 }

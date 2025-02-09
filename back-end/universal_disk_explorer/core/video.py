@@ -237,7 +237,7 @@ class VideoAnalyzer:
                     logger.info(f"Screenshot generated: {screenshot_path}")
 
                 if screenshot_path.exists():
-                    screenshots.append(str(screenshot_path))
+                    screenshots.append(str(screenshot_path.resolve()))  # Convert to absolute path
                 else:
                     logger.error(f"Screenshot not created: {screenshot_path}")
 

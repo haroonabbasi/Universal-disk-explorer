@@ -97,14 +97,11 @@ class FileScanner:
                 metadata.hash = await self.compute_file_hash(path)
 
             # Check if it's a video file
-            logger.info("reach here")
             video_extensions = {'.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv'}
             if metadata.file_type.lower() in video_extensions:
-                logger.info("reach here 1")
                 metadata.video_metadata = await self.video_analyzer.get_video_metadata(
                     path, generate_screenshots=generate_video_screenshots
                 )
-                logger.info("reach here 555")
 
             self.processed_files += 1
             self.update_progress()
@@ -305,6 +302,7 @@ class FileScanner:
         low_quality_videos: bool = False,
         top_n: Optional[int] = None,
         include_duplicates: bool = False,
+        preview_image: bool = True
     ):
         """
         Perform a background scan with filters and save results to a file.
@@ -313,7 +311,7 @@ class FileScanner:
         results = []
 
         # Scan the directory and apply filters
-        async for metadata in self.scan_directory(root_path):
+        async for metadata in self.scan_directory(root_path,None,None,False,preview_image):
             # Apply size filter
             if min_size is not None and metadata.size < min_size:
                 continue

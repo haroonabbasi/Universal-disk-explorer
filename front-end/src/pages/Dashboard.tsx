@@ -23,7 +23,7 @@ const { Panel } = Collapse;
 
 interface DashboardProps {
   token: any;
-  setFiles: (files: any[]) => void;
+  setFiles: (files: FileInfo[]) => void;
   messageApi: any;
 }
 
@@ -47,6 +47,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     createdBefore: null,
     modifiedBefore: null,
     lowQualityVideos: false,
+    previewImage: false,
   });
 
   const pageVariants = {
@@ -163,6 +164,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     // Direct mapping for boolean.
     params.low_quality_videos = filters.lowQualityVideos;
+    params.preview_image = filters.previewImage;
 
     return params;
   };
@@ -304,6 +306,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                     onChange={e => setFilters({ ...filters, lowQualityVideos: e.target.checked })}
                   >
                     Low-Quality Videos
+                  </Checkbox>
+                  <Checkbox
+                    checked={filters.previewImage}
+                    onChange={e => setFilters({ ...filters, previewImage: e.target.checked })}
+                  >
+                    Include File Preview Image
                   </Checkbox>
                 </div>
               </Collapse.Panel>

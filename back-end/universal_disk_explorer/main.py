@@ -140,6 +140,7 @@ async def search_files(
     low_quality_videos: Optional[bool] = Query(default=False, description="Include only low-quality videos"),
     top_n: Optional[int] = Query(default=None, description="Return the top N largest files"),
     include_duplicates: Optional[bool] = Query(default=False, description="Include duplicate files (based on hash)"),
+    preview_image: bool = Query(default=False, description="Include preview image of file")
 ):
     """
     Start a background search for files based on filters.
@@ -165,6 +166,7 @@ async def search_files(
         low_quality_videos=low_quality_videos,
         top_n=top_n,
         include_duplicates=include_duplicates,
+        preview_image=preview_image
     )
 
     return {

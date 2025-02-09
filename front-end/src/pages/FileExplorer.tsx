@@ -12,8 +12,8 @@ const { Sider, Content } = Layout;
 
 interface FileExplorerProps {
   token: any;
-  files: any[];
-  setFiles: (files: any[]) => void;
+  files: FileInfo[];
+  setFiles: (files: FileInfo[]) => void;
   messageApi: any;
 }
 
