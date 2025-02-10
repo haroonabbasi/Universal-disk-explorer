@@ -1,4 +1,4 @@
-# Universal Disk Explorer
+# Universal Disk Explorer [Underdeveloment]
 
 Universal Disk Explorer is a powerful cross-platform application for disk content analysis, file management, and video analysis. The project is divided into two main components: a **back-end application** built with FastAPI and a **front-end application** using Tauri, React, and TypeScript.
 
@@ -44,18 +44,20 @@ Refer to the [Front-End README](./front-end/README.md) for development environme
 
 Pending feature:
 
-[x] front-end app should show current drive list
-[x] front-end app show dailog box to select folder
-[] front-end app should also have way to select from scan history
-[] front-end app should also have recent path scanned as history
-[] back-end app - save scanned result in database in history that can be loaded on front-end at any point.
-[] back-end app - also if input path is same as before and in history it exist and if folder size and number of file is currently same as beforet send result from database rather then doing the scan again.
-[] back-end app - create history of file operation perform (may be to track down if any file was deleted by mistake)
-[] front-end app - UI configurations
-[] front-end app - dashboard can show option of scan and few stats
-[] front-end app - File explorer can show scan details
-[] front-end app - setting can show any kind of setting in future
-[] feature to show top 1000 large size files
+- [x] front-end app should show current drive list
+- [x] front-end app show dailog box to select folder
+- [ ] front-end app should also have way to select from scan history
+- [ ] front-end app should also have recent path scanned as history
+- [ ] back-end app - save scanned result in database in history that can be loaded on front-end at any point.
+- [ ] back-end app - also if input path is same as before and in history it exist and if folder size and number of file is currently same as beforet send result from database rather then doing the scan again.
+- [ ] back-end app - create history of file operation perform (may be to track down if any file was deleted by mistake)
+- [ ] front-end app - UI configurations
+- [ ] front-end app - dashboard can show option of scan and few stats
+- [ ] front-end app - File explorer can show scan details
+- [ ] front-end app - setting can show any kind of setting in future
+- [ ] duplicate file based on similar keywords and (similar video lenth or different size)
+
+
 
 ##  License
 This project is licensed under the MIT License. 

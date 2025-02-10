@@ -19,6 +19,8 @@ import { AnimatePresence } from 'framer-motion';
 import { FileInfo } from "./interfaces";
 import FileExplorer from './pages/FileExplorer';
 import Dashboard from './pages/Dashboard';
+import Settings from './pages/Settings';
+import axios from 'axios';
 
 const { Header, Content, Footer, Sider } = Layout;
 const { useToken } = theme;
@@ -29,7 +31,6 @@ function FileExplorerApp() {
   const [files, setFiles] = useState<FileInfo[]>([]);
   const [messageApi, contextHolder] = message.useMessage();
   const { token } = useToken();
-
 
   return (
     <ConfigProvider
@@ -101,7 +102,14 @@ function FileExplorerApp() {
             }}
           >
             <AnimatePresence>
-              {currentPage === "dashboard" ? <Dashboard setFiles={setFiles} messageApi={messageApi} token={token} /> : <FileExplorer setFiles={setFiles} messageApi={messageApi} files={files} token={token} />}
+              {(() => {
+                const pages: Record<string, JSX.Element> = {
+                  dashboard: <Dashboard setFiles={setFiles} messageApi={messageApi} token={token} setCurrentPage={setCurrentPage} />,
+                  "file-explorer": <FileExplorer setFiles={setFiles} messageApi={messageApi} files={files} token={token} />,
+                  settings: <Settings messageApi={messageApi} token={token} />
+                };
+                return pages[currentPage] || <Dashboard setFiles={setFiles} messageApi={messageApi} token={token} setCurrentPage={setCurrentPage} />;
+              })()}
             </AnimatePresence>
           </Content>
 

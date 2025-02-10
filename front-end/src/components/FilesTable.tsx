@@ -6,15 +6,6 @@ import { invoke } from "@tauri-apps/api/core";
 import { FileInfo } from "../interfaces";
 import Thumbnail from "./Thumbnail";
 
-// Define the File interface for TypeScript.
-// export interface File {
-//   path: string;
-//   name: string;
-//   size: number;
-//   file_type?: string;
-//   modified_time: string | number;
-// }
-
 // Props for our FilesTable component.
 interface FilesTableProps {
   files: FileInfo[];
@@ -40,8 +31,8 @@ const FilesTable: React.FC<FilesTableProps> = ({ files, onDelete, theme }) => {
 
   // Filter files based on the search text (case-insensitive search on file name).
   const filteredFiles = useMemo(() => {
-    if (!searchText) return files;
-    return files.filter((file) =>
+    if (!searchText) return [...files]; // Ensure new array reference
+    return files.filter(file =>
       file.name.toLowerCase().includes(searchText.toLowerCase())
     );
   }, [files, searchText]);
@@ -60,55 +51,41 @@ const FilesTable: React.FC<FilesTableProps> = ({ files, onDelete, theme }) => {
     }
   };
 
+  // Update the screenshot rendering functions
   const getScreenshots = (file: FileInfo) => {
-    if (file.video_metadata?.video_screenshots?.length) {
-      return file.video_metadata.video_screenshots;
-    }
-    return file.screenshots || [];
+    // Prioritize video screenshots first
+    return file.video_metadata?.video_screenshots?.length
+      ? file.video_metadata.video_screenshots
+      : file.screenshots || [];
   };
 
-  // const renderScreenshots = (file: FileInfo) => {
-  //   const screenshots = getScreenshots(file);
-  //   if (screenshots.length === 0) return null;
-
-  //   return (
-  //     <Row gutter={4}>
-  //       {screenshots.slice(0, 3).map((src, index) => (
-  //         <Col key={index}>
-  //           <Popover
-  //             content={<img src={src} style={{ maxWidth: 400, maxHeight: 400 }} />}
-  //             trigger="hover"
-  //           >
-  //             <img
-  //               src={src}
-  //               alt={`Preview ${index + 1}`}
-  //               style={{ 
-  //                 width: 50, 
-  //                 height: 50, 
-  //                 objectFit: "cover", 
-  //                 cursor: "pointer",
-  //                 borderRadius: 4 
-  //               }}
-  //             />
-  //           </Popover>
-  //         </Col>
-  //       ))}
-  //     </Row>
-  //   );
-  // };
   const renderScreenshots = (file: FileInfo) => {
     const screenshots = getScreenshots(file);
-    
+
     return (
       <Row gutter={4}>
         {screenshots.slice(0, 3).map((path, index) => (
           <Col key={index}>
             <Popover
-              content={<Thumbnail path={path} />}
+              content={
+                <div style={{
+                  maxWidth: 400,
+                  maxHeight: 400,
+                  overflow: 'hidden',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  backgroundColor: '#f0f0f0'
+                }}>
+                  <Thumbnail path={path} size={400} />
+                </div>
+              }
               trigger="hover"
+              overlayStyle={{
+                maxWidth: 420 // Slightly larger than content
+              }}
             >
               <div style={{ cursor: "pointer" }}>
-                <Thumbnail path={path} />
+                <Thumbnail path={path} size={50} />
               </div>
             </Popover>
           </Col>

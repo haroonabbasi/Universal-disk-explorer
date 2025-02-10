@@ -23,7 +23,6 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   setFiles,
   messageApi
 }) => {
-
   // const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [filteredFiles, setFilteredFiles] = useState<FileInfo[]>([]);
@@ -89,7 +88,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
   const convertToTreeData = (node: Record<string, any>, path: string = '') => {
     return Object.keys(node).map((key): any => {
-      const fullPath = path ? `${path}/${key}` : `/${key}`; // Ensure keys start with '/'
+      const fullPath = path ? `${path}/${key}` : `/${key}`;
       return {
         title: key,
         key: fullPath,
@@ -107,8 +106,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
     try {
       await axios.post("http://localhost:8000/files/delete", selectedRowKeys);
-      setFiles(files.filter((file: FileInfo) => !selectedRowKeys.includes(file.path)));
-      // setSelectedRowKeys([]);
+
+      setFiles(prevFiles => prevFiles.filter(file => !selectedRowKeys.includes(file.path)));
+      // setFiles(files.filter((file: FileInfo) => !selectedRowKeys.includes(file.path)));
+
       messageApi.success("Files deleted successfully");
     } catch (error) {
       messageApi.error("Failed to delete files");
@@ -117,13 +118,13 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   };
 
   useEffect(() => {
-    if (files.length > 0) {
-      const treeData = getFolderTree(files);
-      console.log('treeData:', treeData);
-      console.log('treeData:', JSON.stringify(treeData));
-      setFolderTree([{ title: "All", key: "ALL", children: treeData }]);
-      setFilteredFiles(files); // Show all files by default
-    }
+    // if (files.length > 0) {
+    const treeData = getFolderTree(files);
+    console.log('treeData:', treeData);
+    console.log('treeData:', JSON.stringify(treeData));
+    setFolderTree([{ title: "All", key: "ALL", children: treeData }]);
+    // }
+    setFilteredFiles(files); // Show all files by default
   }, [files]);
 
   const renderFileView = () => (

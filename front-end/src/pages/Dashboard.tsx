@@ -24,13 +24,15 @@ const { Panel } = Collapse;
 interface DashboardProps {
   token: any;
   setFiles: (files: FileInfo[]) => void;
+  setCurrentPage: (currentPage:string) => void;
   messageApi: any;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
   token,
   setFiles,
-  messageApi
+  setCurrentPage,
+  messageApi,
 }) => {
 
   const [drives, setDrives] = useState<string[]>([]);
@@ -129,6 +131,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     try {
       const { data } = await axios.get<FileInfo[]>("http://localhost:8000/results");
       setFiles(data);
+      setCurrentPage("file-explorer");
     } catch (error) {
       messageApi.error("Failed to fetch results");
       console.error("Results error:", error);
