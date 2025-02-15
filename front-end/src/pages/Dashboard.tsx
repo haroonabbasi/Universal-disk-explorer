@@ -24,7 +24,7 @@ const { Panel } = Collapse;
 interface DashboardProps {
   token: any;
   setFiles: (files: FileInfo[]) => void;
-  setCurrentPage: (currentPage:string) => void;
+  setCurrentPage: (currentPage: string) => void;
   messageApi: any;
 }
 
@@ -169,6 +169,12 @@ const Dashboard: React.FC<DashboardProps> = ({
     params.low_quality_videos = filters.lowQualityVideos;
     params.preview_image = filters.previewImage;
 
+
+    // Include top_n if provided.
+    if (filters.topN !== null && filters.topN !== undefined) {
+      params.top_n = filters.topN;
+    }
+
     return params;
   };
 
@@ -211,13 +217,6 @@ const Dashboard: React.FC<DashboardProps> = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          {progress && (
-            <Progress
-              percent={progress.progress_percentage}
-              strokeColor={token.colorPrimary}
-              status={progress.status === 'complete' ? 'success' : 'active'}
-            />
-          )}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16 }}>
             <Tooltip title="Total Files Scanned">
               <Card.Grid hoverable={false} style={{ width: '33%', textAlign: 'center' }}>
@@ -229,11 +228,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                 120 Duplicates
               </Card.Grid>
             </Tooltip>
-            <Tooltip title="Storage Saved">
-              <Card.Grid hoverable={false} style={{ width: '33%', textAlign: 'center' }}>
-                2.3 GB Saved
-              </Card.Grid>
-            </Tooltip>
+            {/* <Tooltip title="Storage Saved"> */}
+            <Card.Grid hoverable={false} style={{ width: '33%', textAlign: 'center' }}>
+              2.3 GB Saved
+            </Card.Grid>
+            {/* </Tooltip> */}
           </div>
         </motion.div>
       </Card>
@@ -277,47 +276,75 @@ const Dashboard: React.FC<DashboardProps> = ({
           {mode === "search" && (
             <Collapse defaultActiveKey={[]}>
               <Collapse.Panel header="Filters" key="filters">
-                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-                  <InputNumber
-                    placeholder="Min Size (MB)"
-                    onChange={value => setFilters({ ...filters, minSize: value })}
-                  />
-                  <InputNumber
-                    placeholder="Max Size (MB)"
-                    onChange={value => setFilters({ ...filters, maxSize: value })}
-                  />
-                  <Select
-                    mode="multiple"
-                    placeholder="File Types"
-                    onChange={value => setFilters({ ...filters, fileTypes: value })}
-                    options={[
-                      { label: "Images", value: "image" },
-                      { label: "Videos", value: "video" },
-                      { label: "Documents", value: "document" },
-                    ]}
-                  />
-                  <DatePicker
-                    placeholder="Created Before"
-                    onChange={date => setFilters({ ...filters, createdBefore: date })}
-                  />
-                  <DatePicker
-                    placeholder="Modified Before"
-                    onChange={date => setFilters({ ...filters, modifiedBefore: date })}
-                  />
-                  <Checkbox
-                    checked={filters.lowQualityVideos}
-                    onChange={e => setFilters({ ...filters, lowQualityVideos: e.target.checked })}
-                  >
-                    Low-Quality Videos
-                  </Checkbox>
-                  <Checkbox
-                    checked={filters.previewImage}
-                    onChange={e => setFilters({ ...filters, previewImage: e.target.checked })}
-                  >
-                    Include File Preview Image
-                  </Checkbox>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {/* First row: Other fields */}
+                  <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                    <Tooltip title="Minimum file size in MB">
+                      <InputNumber
+                        placeholder="Min Size (MB)"
+                        onChange={value => setFilters({ ...filters, minSize: value })}
+                      />
+                    </Tooltip>
+                    <Tooltip title="Maximum file size in MB">
+                      <InputNumber
+                        placeholder="Max Size (MB)"
+                        onChange={value => setFilters({ ...filters, maxSize: value })}
+                      />
+                    </Tooltip>
+                    <Tooltip title="Select file types">
+                      <Select
+                        mode="multiple"
+                        placeholder="File Types"
+                        style={{ width: 200 }}
+                        onChange={value => setFilters({ ...filters, fileTypes: value })}
+                        options={[
+                          { label: "Images", value: "image" },
+                          { label: "Videos", value: "video" },
+                          { label: "Documents", value: "document" },
+                        ]}
+                      />
+                    </Tooltip>
+                    <Tooltip title="Enter the number of top largest files">
+                      <InputNumber
+                        placeholder="Top N Largest Files"
+                        onChange={value => setFilters({ ...filters, topN: value })}
+                      />
+                    </Tooltip>
+                    <Tooltip title="Select a date to filter files created before">
+                      <DatePicker
+                        placeholder="Created Before"
+                        onChange={date => setFilters({ ...filters, createdBefore: date })}
+                      />
+                    </Tooltip>
+                    <Tooltip title="Select a date to filter files modified before">
+                      <DatePicker
+                        placeholder="Modified Before"
+                        onChange={date => setFilters({ ...filters, modifiedBefore: date })}
+                      />
+                    </Tooltip>
+                  </div>
+                  {/* Second row: Checkboxes */}
+                  <div style={{ display: 'flex', gap: 16 }}>
+                    <Tooltip title="Include only low-quality videos">
+                      <Checkbox
+                        checked={filters.lowQualityVideos}
+                        onChange={e => setFilters({ ...filters, lowQualityVideos: e.target.checked })}
+                      >
+                        Low-Quality Videos
+                      </Checkbox>
+                    </Tooltip>
+                    <Tooltip title="Include a preview image of the file">
+                      <Checkbox
+                        checked={filters.previewImage}
+                        onChange={e => setFilters({ ...filters, previewImage: e.target.checked })}
+                      >
+                        Include File Preview Image
+                      </Checkbox>
+                    </Tooltip>
+                  </div>
                 </div>
               </Collapse.Panel>
+
             </Collapse>
           )}
 
@@ -330,6 +357,13 @@ const Dashboard: React.FC<DashboardProps> = ({
           >
             {mode === "scan" ? "Start Scan" : "Start Search"}
           </Button>
+          {progress && (
+            <Progress
+              percent={progress.progress_percentage}
+              strokeColor={token.colorPrimary}
+              status={progress.status === 'complete' ? 'success' : 'active'}
+            />
+          )}
         </motion.div>
       </Card>
     </motion.div>

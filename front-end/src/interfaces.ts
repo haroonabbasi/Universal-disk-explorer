@@ -45,6 +45,7 @@ export interface FileInfo {
 }
 
 export interface Filters {
+  topN: number | null;   
   minSize: number | null;           // in MB, later converted to bytes
   maxSize: number | null;           // in MB, later converted to bytes
   fileTypes: string[];              // an array of file type identifiers

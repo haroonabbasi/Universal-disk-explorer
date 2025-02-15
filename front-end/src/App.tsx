@@ -35,26 +35,26 @@ function FileExplorerApp() {
   return (
     <ConfigProvider
       theme={{
-        algorithm: theme.darkAlgorithm,
+        // algorithm: theme.darkAlgorithm,
         token: {
-          colorPrimary: '#fa8c16',
-          colorBgBase: '#141414',
-          colorBgContainer: '#1f1f1f', // Slightly lighter background for content
-          colorText: '#ffffff',
-          colorTextSecondary: '#a0a0a0', // Lighter secondary text color for sidebar
-          borderRadius: 8
+          // colorPrimary: '#fa8c16',
+          // colorBgBase:  '#1f1f1f',
+          // colorBgContainer: '#1f1f1f', // Slightly lighter background for content
+          // colorText: '#0000',
+          // colorTextSecondary: '#a0a0a0', // Lighter secondary text color for sidebar
+          // borderRadius: 8
         }
       }}
     >
       {contextHolder}
-      <Layout style={{ minHeight: '100vh', background: '#141414' }}>
+      <Layout style={{ minHeight: '100vh', background: token.colorBgBase }}>
         <Sider
           trigger={null}
           collapsible
           collapsed={collapsed}
           width={250}
           style={{
-            background: '#1f1f1f',
+            background: token.colorBgContainer,
             boxShadow: '2px 0 8px rgba(0,0,0,0.15)'
           }}
         >
@@ -75,7 +75,7 @@ function FileExplorerApp() {
         <Layout>
           <Header
             style={{
-              background: '#0a0a0a',
+              background: token.colorBgContainer,
               padding: 0,
               display: 'flex',
               alignItems: 'center'
@@ -97,7 +97,7 @@ function FileExplorerApp() {
             style={{
               margin: 16,
               padding: 16,
-              background: '#1f1f1f',
+              background: token.colorBgContainer,
               borderRadius: 8
             }}
           >
