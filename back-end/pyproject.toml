@@ -16,7 +16,28 @@ imagehash = "^4.3.1"
 python-magic = "^0.4.27"
 pydantic = "^2.0.0"
 pydantic-settings = "^2.7.1"
-send2trash = "^1.8.0"  # Specify the version if needed
+send2trash = "^1.8.0"
+opencv-python-headless = ">=4.8.1,<4.9"  # Updated OpenCV version
+numpy = ">=1.26.0,<1.27"  # Last NumPy 1.x series with 3.12 support
+tqdm = "4.65.0"
+
+[tool.poetry.group.accelerate.dependencies]
+scikit-image = ">=0.22.0"  # Requires NumPy >=1.23
+numba = ">=0.59.0"  # First version with Python 3.12 support
+
+# numpy = "1.24.3"
+# opencv-python-headless = "4.7.0.72"
+# tqdm = "4.65.0"
+# numpy = ">=1.26.0"
+
+# [tool.poetry.group.accelerate.dependencies]
+# # scikit-image = "0.20.0"
+# # numba = "0.57.0"
+# # For full Python 3.12 compatibility, consider:
+# numba = ">=0.58.0"
+# scikit-image = ">=0.21.0"
+
+
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.3.1"

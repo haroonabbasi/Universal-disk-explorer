@@ -120,7 +120,8 @@ class FileScanner:
         exclude_dirs: Set[str] = None,
         exclude_patterns: Set[str] = None,
         include_hash: bool = True,
-        generate_video_screenshots: bool = True
+        generate_video_screenshots: bool = True,
+        low_quality_videos: bool = False
     ) -> AsyncGenerator[dict, None]:
         """
         Recursively scan a directory and yield file metadata.
@@ -311,7 +312,7 @@ class FileScanner:
         results = []
 
         # Scan the directory and apply filters
-        async for metadata in self.scan_directory(root_path,None,None,False,preview_image):
+        async for metadata in self.scan_directory(root_path,None,None,False,preview_image,low_quality_videos):
             # Apply size filter
             if min_size is not None and metadata.size < min_size:
                 continue
