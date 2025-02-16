@@ -1,21 +1,12 @@
 import React, { useState, useMemo } from "react";
-import { Input, Table, Button, Col, Dropdown, Menu, Popover, Row } from "antd";
+import { Input, Table, Button, Col, Dropdown, Menu, Popover, Row, Select, Card } from "antd";
 import { SearchOutlined, DeleteOutlined, MoreOutlined } from "@ant-design/icons";
 import { motion } from "framer-motion";
 import { invoke } from "@tauri-apps/api/core";
 import { FileInfo } from "../interfaces";
 import Thumbnail from "./Thumbnail";
 
-// Props for our FilesTable component.
-interface FilesTableProps {
-  files: FileInfo[];
-  onDelete: (paths: string[]) => void;
-  // Optional: you can pass theme tokens if you're using a design system.
-  theme?: {
-    colorBgContainer: string;
-    colorBorderSecondary: string;
-  };
-}
+const { Option } = Select;
 
 // Helper function to format file sizes.
 const formatSize = (size: number): string => {
@@ -25,19 +16,70 @@ const formatSize = (size: number): string => {
   return size + " bytes";
 };
 
+interface FilesTableProps {
+  files: FileInfo[];
+  onDelete: (paths: string[]) => void;
+  theme?: {
+    colorBgContainer: string;
+    colorBorderSecondary: string;
+  };
+}
+
 const FilesTable: React.FC<FilesTableProps> = ({ files, onDelete, theme }) => {
   const [searchText, setSearchText] = useState<string>("");
+  const [fileTypeFilter, setFileTypeFilter] = useState<string | null>(null);
+  const [videoCategoryFilter, setVideoCategoryFilter] = useState<string | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
 
-  // Filter files based on the search text (case-insensitive search on file name).
-  const filteredFiles = useMemo(() => {
-    if (!searchText) return [...files]; // Ensure new array reference
-    return files.filter(file =>
-      file.name.toLowerCase().includes(searchText.toLowerCase())
-    );
-  }, [files, searchText]);
+  // Extract unique file types from the files list.
+  const fileTypes = useMemo(() => {
+    const types = new Set<string>();
+    files.forEach((file) => {
+      if (file.file_type) {
+        types.add(file.file_type);
+      }
+    });
+    return Array.from(types);
+  }, [files]);
 
-  // Delete handler will call the passed onDelete prop and reset selection.
+  // Extract unique video quality categories from video files.
+  const videoCategories = useMemo(() => {
+    const categories = new Set<string>();
+    files.forEach((file) => {
+      const category = file.video_metadata?.video_qauality_result?.category;
+      if (category) {
+        categories.add(category);
+      }
+    });
+    return Array.from(categories);
+  }, [files]);
+
+  // Filter files based on search text and the additional filters.
+  const filteredFiles = useMemo(() => {
+    let filtered = [...files];
+
+    if (searchText) {
+      filtered = filtered.filter((file) =>
+        file.name.toLowerCase().includes(searchText.toLowerCase())
+      );
+    }
+
+    if (fileTypeFilter) {
+      filtered = filtered.filter((file) => file.file_type === fileTypeFilter);
+    }
+
+    if (videoCategoryFilter) {
+      filtered = filtered.filter(
+        (file) =>
+          file.video_metadata &&
+          file.video_metadata.video_qauality_result &&
+          file.video_metadata.video_qauality_result.category === videoCategoryFilter
+      );
+    }
+
+    return filtered;
+  }, [files, searchText, fileTypeFilter, videoCategoryFilter]);
+
   const handleDelete = () => {
     onDelete(selectedRowKeys);
     setSelectedRowKeys([]);
@@ -57,11 +99,10 @@ const FilesTable: React.FC<FilesTableProps> = ({ files, onDelete, theme }) => {
     } catch (error) {
       console.error("Error opening file folder:", error);
     }
-  };  
+  };
 
-  // Update the screenshot rendering functions
+  // Render screenshots for a file.
   const getScreenshots = (file: FileInfo) => {
-    // Prioritize video screenshots first
     return file.video_metadata?.video_screenshots?.length
       ? file.video_metadata.video_screenshots
       : file.screenshots || [];
@@ -69,27 +110,39 @@ const FilesTable: React.FC<FilesTableProps> = ({ files, onDelete, theme }) => {
 
   const renderScreenshots = (file: FileInfo) => {
     const screenshots = getScreenshots(file);
-
     return (
       <Row gutter={4}>
+                {/* <Image.PreviewGroup
+          preview={{
+            onChange: (current, prev) => console.log(`current index: ${current}, prev index: ${prev}`),
+          }}
+        >
+          <Image width={200} src="https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg" />
+          <Image
+            width={200}
+            src="https://gw.alipayobjects.com/zos/antfincdn/aPkFc8Sj7n/method-draw-image.svg"
+          />
+        </Image.PreviewGroup> */}
         {screenshots.slice(0, 3).map((path, index) => (
           <Col key={index}>
             <Popover
               content={
-                <div style={{
-                  maxWidth: 400,
-                  maxHeight: 400,
-                  overflow: 'hidden',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  backgroundColor: '#f0f0f0'
-                }}>
+                <div
+                  style={{
+                    maxWidth: 400,
+                    maxHeight: 400,
+                    overflow: "hidden",
+                    display: "flex",
+                    justifyContent: "center",
+                    backgroundColor: "#f0f0f0",
+                  }}
+                >
                   <Thumbnail path={path} size={400} />
                 </div>
               }
               trigger="hover"
               overlayStyle={{
-                maxWidth: 420 // Slightly larger than content
+                maxWidth: 420,
               }}
             >
               <div style={{ cursor: "pointer" }}>
@@ -102,36 +155,45 @@ const FilesTable: React.FC<FilesTableProps> = ({ files, onDelete, theme }) => {
     );
   };
 
-  // Define columns with sorters and custom renderers.
+  // Define columns for the table.
   const columns = [
     {
       title: "Name",
       dataIndex: "name",
-      sorter: (a: File, b: File) => a.name.localeCompare(b.name),
+      sorter: (a: FileInfo, b: FileInfo) => a.name.localeCompare(b.name),
     },
     {
       title: "Size",
       dataIndex: "size",
       render: (size: number) => formatSize(size),
-      sorter: (a: File, b: File) => a.size - b.size,
+      sorter: (a: FileInfo, b: FileInfo) => a.size - b.size,
     },
     {
       title: "Type",
       dataIndex: "file_type",
-      sorter: (a: File, b: File) =>
+      sorter: (a: FileInfo, b: FileInfo) =>
         (a.file_type || "").localeCompare(b.file_type || ""),
+    },
+    {
+      title: "Category",
+      // This column shows video quality category if available
+      render: (_: any, record: FileInfo) =>
+        record.video_metadata?.video_qauality_result?.category || "",
+      sorter: (a: FileInfo, b: FileInfo) => {
+        const catA = a.video_metadata?.video_qauality_result?.category || "";
+        const catB = b.video_metadata?.video_qauality_result?.category || "";
+        return catA.localeCompare(catB);
+      },
     },
     {
       title: "Modified",
       dataIndex: "modified_time",
-      render: (date: string | number) =>
-        new Date(date).toLocaleDateString(),
-      sorter: (a: File, b: File) =>
-        new Date(a.modified_time).getTime() -
-        new Date(b.modified_time).getTime(),
+      render: (date: string | number) => new Date(date).toLocaleDateString(),
+      sorter: (a: FileInfo, b: FileInfo) =>
+        new Date(a.modified_time).getTime() - new Date(b.modified_time).getTime(),
     },
     {
-      title: 'Screenshots',
+      title: "Screenshots",
       render: (_: any, record: FileInfo) => renderScreenshots(record),
     },
     {
@@ -158,28 +220,61 @@ const FilesTable: React.FC<FilesTableProps> = ({ files, onDelete, theme }) => {
 
   return (
     <div>
-      {/* Search Input */}
-      <Input
-        prefix={<SearchOutlined />}
-        placeholder="Search files..."
-        value={searchText}
-        onChange={(e) => setSearchText(e.target.value)}
-        style={{
-          marginBottom: 16,
-          background: theme?.colorBgContainer || "#fff",
-          borderColor: theme?.colorBorderSecondary || "#d9d9d9",
-        }}
-      />
+      {/* Search and Filter Section */}
+      <div style={{ marginBottom: 16 }}>
+        <Input
+          prefix={<SearchOutlined />}
+          placeholder="Search files..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{
+            marginBottom: 8,
+            background: theme?.colorBgContainer || "#fff",
+            borderColor: theme?.colorBorderSecondary || "#d9d9d9",
+          }}
+        />
+        <Row gutter={16}>
+          <Col>
+            <Select
+              allowClear
+              placeholder="Filter by file type"
+              style={{ width: 200 }}
+              value={fileTypeFilter || undefined}
+              onChange={(value) => setFileTypeFilter(value)}
+            >
+              {fileTypes.map((type) => (
+                <Option key={type} value={type}>
+                  {type}
+                </Option>
+              ))}
+            </Select>
+          </Col>
+          <Col>
+            <Select
+              allowClear
+              placeholder="Filter by video category"
+              style={{ width: 200 }}
+              value={videoCategoryFilter || undefined}
+              onChange={(value) => setVideoCategoryFilter(value)}
+            >
+              {videoCategories.map((cat) => (
+                <Option key={cat} value={cat}>
+                  {cat}
+                </Option>
+              ))}
+            </Select>
+          </Col>
+        </Row>
+      </div>
 
-      {/* Files Table with row selection and animated rows */}
+      {/* Files Table */}
       <Table
         rowKey="path"
         columns={columns}
         dataSource={filteredFiles}
         rowSelection={{
           selectedRowKeys,
-          onChange: (keys: React.Key[]) =>
-            setSelectedRowKeys(keys as string[]),
+          onChange: (keys: React.Key[]) => setSelectedRowKeys(keys as string[]),
         }}
         pagination={{ pageSize: 50 }}
         components={{

@@ -46,7 +46,7 @@ Pending feature:
 
 - [x] front-end app should show current drive list
 - [x] front-end app show dailog box to select folder
-- [ ] front-end app should also have way to select from scan history
+- [x] front-end app should also have way to select from scan history
 - [ ] front-end app should also have recent path scanned as history
 - [ ] back-end app - save scanned result in database in history that can be loaded on front-end at any point.
 - [ ] back-end app - also if input path is same as before and in history it exist and if folder size and number of file is currently same as beforet send result from database rather then doing the scan again.
@@ -56,8 +56,13 @@ Pending feature:
 - [ ] front-end app - File explorer can show scan details
 - [ ] front-end app - setting can show any kind of setting in future
 - [ ] duplicate file based on similar keywords and (similar video lenth or different size)
-
-
+- [x] interated the new alorithem to analyize video 
+- [x] make sure if screenshot already existing don't create them
+- [ ] see if we can build resume scanning funcaionlity
+- [x] add file action to open folder location
+- [ ] add move all selected files to folder
+- [ ] add stop button which stops scanning and shows the result what ever it scanned so far
+- [ ] add start time and end time for each file result so we can also see in future how much time each file scanning took
 
 ##  License
 This project is licensed under the MIT License. 

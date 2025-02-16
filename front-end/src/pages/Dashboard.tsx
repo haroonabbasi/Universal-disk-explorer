@@ -381,11 +381,11 @@ const Dashboard: React.FC<DashboardProps> = ({
             </Col>
             <Col>
               <HistorySelect onSelect={handleHistorySelect}  style={{ marginTop: 16 }} />
-              {loading && (
+              {/* {loading && (
                 <div style={{ marginTop: 20 }}>
                   <Spin tip="Loading file data..." />
                 </div>
-              )}
+              )} */}
             </Col>
           </Row>
           {progress && (
