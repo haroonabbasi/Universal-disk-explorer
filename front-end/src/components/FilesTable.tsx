@@ -51,6 +51,14 @@ const FilesTable: React.FC<FilesTableProps> = ({ files, onDelete, theme }) => {
     }
   };
 
+  const handleOpenFileFolder = async (path: string) => {
+    try {
+      await invoke("open_file_folder", { path });
+    } catch (error) {
+      console.error("Error opening file folder:", error);
+    }
+  };  
+
   // Update the screenshot rendering functions
   const getScreenshots = (file: FileInfo) => {
     // Prioritize video screenshots first
@@ -127,17 +135,20 @@ const FilesTable: React.FC<FilesTableProps> = ({ files, onDelete, theme }) => {
       render: (_: any, record: FileInfo) => renderScreenshots(record),
     },
     {
-      title: 'Actions',
-      render: (_: any, record: File) => (
+      title: "Actions",
+      render: (_: any, record: FileInfo) => (
         <Dropdown
           overlay={
             <Menu>
               <Menu.Item key="open" onClick={() => handleOpenFile(record.path)}>
-                Open
+                Open File
+              </Menu.Item>
+              <Menu.Item key="open_folder" onClick={() => handleOpenFileFolder(record.path)}>
+                Open Folder
               </Menu.Item>
             </Menu>
           }
-          trigger={['click']}
+          trigger={["click"]}
         >
           <Button type="text" icon={<MoreOutlined />} />
         </Dropdown>

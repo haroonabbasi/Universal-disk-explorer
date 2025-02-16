@@ -11,7 +11,9 @@ import {
   Checkbox,
   Progress,
   Tooltip,
-  message
+  message,
+  Col,
+  Row
 } from 'antd';
 import { FolderOpenOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
@@ -265,7 +267,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               Browse
             </Button>
           </div>
-
+          <div style={{ display: 'flex', gap: 16, marginBottom: 16,color:token.colorPrimary }}>
+          {selectedPath}
+          </div>
           <div style={{ marginBottom: 16 }}>
             <Radio.Group value={mode} onChange={e => setMode(e.target.value)}>
               <Radio.Button value="scan">Scan</Radio.Button>

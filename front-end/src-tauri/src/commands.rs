@@ -88,6 +88,13 @@ pub fn open_file(path: String) {
     opener::open(path).unwrap();
 }
 
+#[command]
+pub fn open_file_folder(path: String) {
+    if let Some(parent) = std::path::Path::new(&path).parent() {
+        let _ = opener::open(parent.to_str().unwrap());
+    }
+}
+
 /// Macro to auto-register all commands.
 /// The fully-qualified paths are used to ensure the commands are located correctly.
 #[macro_export]
@@ -96,7 +103,8 @@ macro_rules! register_commands {
         tauri::generate_handler![
             crate::commands::get_drives,
             crate::commands::open_file,
-            crate::commands::get_thumbnail
+            crate::commands::get_thumbnail,
+            crate::commands::open_file_folder
         ]
     };
 }
