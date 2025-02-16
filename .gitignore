@@ -1,2 +1,14 @@
 
 .history/
+.idea
+.vscode
+
+__pycache__
+
+back-end/.env
+back-end/app.log
+back-end/poetry.lock
+back-end/poetry.lock
+back-end/output
+
+

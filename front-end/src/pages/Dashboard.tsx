@@ -13,7 +13,8 @@ import {
   Tooltip,
   message,
   Col,
-  Row
+  Row,
+  Spin
 } from 'antd';
 import { FolderOpenOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
@@ -21,6 +22,7 @@ import { FileInfo, Filters, ScanProgress } from '../interfaces';
 import { invoke } from '@tauri-apps/api/core';
 import axios from 'axios';
 import { open } from '@tauri-apps/plugin-dialog';
+import HistorySelect from '../components/HistorySelect';
 const { Panel } = Collapse;
 
 interface DashboardProps {
@@ -137,6 +139,20 @@ const Dashboard: React.FC<DashboardProps> = ({
     } catch (error) {
       messageApi.error("Failed to fetch results");
       console.error("Results error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleHistorySelect = async (selectedValue: string) => {
+    setLoading(true);
+    try {
+      const { data } = await axios.get(`http://localhost:8000/history/${selectedValue}`);
+      setFiles(data);
+      setCurrentPage("file-explorer");
+    } catch (error) {
+      message.error("Failed to fetch history file");
+      console.error("Error fetching history file:", error);
     } finally {
       setLoading(false);
     }
@@ -267,8 +283,8 @@ const Dashboard: React.FC<DashboardProps> = ({
               Browse
             </Button>
           </div>
-          <div style={{ display: 'flex', gap: 16, marginBottom: 16,color:token.colorPrimary }}>
-          {selectedPath}
+          <div style={{ display: 'flex', gap: 16, marginBottom: 16, color: token.colorPrimary }}>
+            {selectedPath}
           </div>
           <div style={{ marginBottom: 16 }}>
             <Radio.Group value={mode} onChange={e => setMode(e.target.value)}>
@@ -351,16 +367,27 @@ const Dashboard: React.FC<DashboardProps> = ({
 
             </Collapse>
           )}
-
-          <Button
-            type="primary"
-            loading={loading}
-            onClick={mode === "scan" ? startScan : startSearch}
-            disabled={!selectedPath}
-            style={{ marginTop: 16 }}
-          >
-            {mode === "scan" ? "Start Scan" : "Start Search"}
-          </Button>
+          <Row gutter={4}>
+            <Col>
+              <Button
+                type="primary"
+                loading={loading}
+                onClick={mode === "scan" ? startScan : startSearch}
+                disabled={!selectedPath}
+                style={{ marginTop: 16 }}
+              >
+                {mode === "scan" ? "Start New Scan" : "Start New Search"}
+              </Button>
+            </Col>
+            <Col>
+              <HistorySelect onSelect={handleHistorySelect}  style={{ marginTop: 16 }} />
+              {loading && (
+                <div style={{ marginTop: 20 }}>
+                  <Spin tip="Loading file data..." />
+                </div>
+              )}
+            </Col>
+          </Row>
           {progress && (
             <Progress
               percent={progress.progress_percentage}

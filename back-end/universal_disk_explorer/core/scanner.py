@@ -210,47 +210,42 @@ class FileScanner:
         except Exception as e:
             logger.error(f"Error updating progress file: {str(e)}")
 
-    def write_results(self, results: list, append: bool = False) -> None:
+    def write_results(self, results: list, result_file: Optional[Path] = None, append: bool = False) -> None:
         """Write scan results to the result file."""
+        file_to_write = result_file if result_file is not None else self.result_file
         if not results:
             return
-
         try:
-            if not self.result_file.exists():
-                self.result_file.write_text("[\n]")
-
+            if not file_to_write.exists():
+                file_to_write.write_text("[\n]")
             # Convert all results to JSON-serializable dictionaries
             serialized_results = [self._serialize_model(result) for result in results]
-
             if append:
-                content = self.result_file.read_text()
+                content = file_to_write.read_text()
                 if content.strip() == '':
                     content = '[\n]'
-                    self.result_file.write_text(content)
-                
+                    file_to_write.write_text(content)
                 if content.rstrip().endswith(']'):
                     content = content.rstrip()[:-1]
                     if not content.rstrip().endswith('['):
                         content += ','
                     content += '\n'
-                    self.result_file.write_text(content)
-                
-                with open(self.result_file, 'a') as f:
+                    file_to_write.write_text(content)
+                with open(file_to_write, 'a') as f:
                     for idx, result in enumerate(serialized_results):
-                        json.dump(result, f, default=str)  # use default=str for any remaining datetime objects
+                        json.dump(result, f, default=str)
                         if idx < len(serialized_results) - 1:
                             f.write(',\n')
                     f.write('\n]')
             else:
-                with open(self.result_file, 'w') as f:
+                with open(file_to_write, 'w') as f:
                     f.write('[\n')
                     for idx, result in enumerate(serialized_results):
-                        json.dump(result, f, default=str)  # use default=str for any remaining datetime objects
+                        json.dump(result, f, default=str)
                         if idx < len(serialized_results) - 1:
                             f.write(',\n')
                         else:
                             f.write('\n]')
-                            
         except Exception as e:
             logger.error(f"Error writing results: {str(e)}")
             self._last_error = f"Failed to write results: {str(e)}"

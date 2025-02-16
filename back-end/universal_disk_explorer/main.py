@@ -87,6 +87,9 @@ async def scan_directory(
     async def scan_task():
         results = []
         try:
+            # Generate a unique result file name for this scan
+            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+            scanner.result_file = Path(f"./output/results-{timestamp}.json")
             async for metadata in scanner.scan_directory(
                 path,
                 exclude_dirs=set(exclude_dirs) if exclude_dirs else {'.git', 'node_modules', 'venv'},
@@ -111,8 +114,9 @@ async def scan_directory(
     return {
         "message": "Scan started",
         "status_endpoint": "/progress",
-        "results_endpoint": "/results"
+        "results_endpoint": f"/history/{scanner.result_file.name}"
     }
+
 
 @app.get("/progress")
 async def get_progress():
@@ -150,14 +154,15 @@ async def search_files(
     created_before_date = datetime.fromisoformat(created_before) if created_before else None
     modified_before_date = datetime.fromisoformat(modified_before) if modified_before else None
 
-    # Define the result file path
-    result_file = Path("./output/search_results.json")
+    # Generate a unique result file name for this search
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    scanner.result_file = Path(f"./output/search_results-{timestamp}.json")
 
     # Start the background task
     background_tasks.add_task(
         scanner.search_directory_with_filters,
         path,
-        result_file,
+        scanner.result_file,
         min_size=min_size,
         max_size=max_size,
         file_types=file_types_list,
@@ -172,8 +177,50 @@ async def search_files(
     return {
         "message": "Search started",
         "status_endpoint": "/search/progress",
-        "results_endpoint": "/search/results"
+        "results_endpoint": f"/history/{scanner.result_file.name}"
     }
+
+# New API endpoint to list all history files (both scan and search results)
+@app.get("/history")
+async def get_history():
+    output_dir = Path("./output")
+    if not output_dir.exists():
+        return {"scans": [], "searches": []}
+    
+    # Get most recent 10 scan result files
+    scan_files = sorted(
+        list(output_dir.glob("results-*.json")),
+        key=lambda f: f.stat().st_mtime,
+        reverse=True
+    )[:10]
+    
+    # Get most recent 10 search result files
+    search_files = sorted(
+        list(output_dir.glob("search_results-*.json")),
+        key=lambda f: f.stat().st_mtime,
+        reverse=True
+    )[:10]
+    
+    history = {
+        "scans": [f.name for f in scan_files],
+        "searches": [f.name for f in search_files]
+    }
+    
+    return history
+
+# New API endpoint to fetch a specific history file by name
+@app.get("/history/{filename}")
+async def get_history_file(filename: str):
+    file_path = Path("./output") / filename
+    if file_path.exists():
+        try:
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+            return data
+        except Exception as e:
+            raise HTTPException(status_code=500, detail="Error reading file")
+    else:
+        raise HTTPException(status_code=404, detail="File not found")
 
 @app.get("/insights/{path:path}")
 async def get_insights(path: str):
